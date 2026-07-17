@@ -33,21 +33,6 @@
     -webkit-user-select:none; user-select:none; -webkit-touch-callout:none;
     touch-action:manipulation;
   }
-  #app{
-    height:100dvh; display:flex; flex-direction:column;
-    padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-  }
-
-  /* ---- top bar ---- */
-  #topbar{
-    height:46px; flex:0 0 auto; display:flex; align-items:center; gap:6px;
-    padding:0 10px; background:var(--panel); border-bottom:1px solid var(--line);
-    overflow-x:auto; white-space:nowrap;
-  }
-  .btn, .brand{flex:0 0 auto}
-  .brand{font-size:13px; letter-spacing:.14em; color:var(--muted); margin-right:4px;}
-  @media (max-width: 860px){ .brand{display:none} .fps input{width:70px} }
-  .spacer{flex:1}
   .btn{
     height:32px; min-width:32px; padding:0 10px; border:1px solid var(--line);
     background:var(--panel-2); color:var(--text); border-radius:8px;
@@ -58,12 +43,59 @@
   .btn[disabled]{opacity:.35}
   .btn.on{background:var(--accent); border-color:var(--accent); color:#0e1418; font-weight:600}
   .btn.wide{padding:0 14px}
+  .lbl{font-size:10px; color:var(--muted); letter-spacing:.08em; white-space:nowrap}
+  input[type=range]{accent-color:var(--accent)}
+  @media (prefers-reduced-motion: reduce){*{transition:none !important; animation:none !important}}
+  :focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+
+  /* ==================== ホーム画面 ==================== */
+  #home{
+    height:100dvh; display:flex; flex-direction:column; background:var(--ink);
+    padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  #homeTop{
+    height:50px; flex:0 0 auto; display:flex; align-items:center; gap:8px; padding:0 14px;
+    background:var(--panel); border-bottom:1px solid var(--line);
+  }
+  #homeTop .brand{font-size:16px; font-weight:700; letter-spacing:.1em; color:var(--text)}
+  #projList{
+    flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch;
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(170px, 1fr)); gap:14px; padding:16px 16px 90px;
+    align-content:start;
+  }
+  #projList .empty{grid-column:1/-1; color:var(--muted); font-size:13px; padding:30px 10px; line-height:1.8; text-align:center}
+  .projCard{position:relative; background:var(--panel-2); border:1px solid var(--line); border-radius:12px; overflow:hidden; cursor:pointer}
+  .projCard canvas{width:100%; display:block; background:#fff}
+  .projInfo{padding:8px 10px}
+  .projName{font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .projDate{font-size:11px; color:var(--muted); margin-top:2px}
+  .projDel{
+    position:absolute; top:6px; right:6px; width:26px; height:26px; border-radius:50%;
+    border:none; background:#000a; color:#fff; font-size:13px; line-height:26px; text-align:center; padding:0;
+  }
+  #newProjBtn{
+    position:fixed; right:22px; bottom:22px; width:58px; height:58px; border-radius:50%;
+    background:var(--accent); color:#0e1418; font-size:28px; border:none; box-shadow:0 6px 18px #0007; z-index:20;
+  }
+
+  /* ==================== エディタ画面 ==================== */
+  #app{
+    height:100dvh; display:none; flex-direction:column;
+    padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  #topbar{
+    height:46px; flex:0 0 auto; display:flex; align-items:center; gap:6px;
+    padding:0 10px; background:var(--panel); border-bottom:1px solid var(--line);
+    overflow-x:auto; white-space:nowrap;
+  }
+  .btn, #topbar .brand{flex:0 0 auto}
+  #projTitle{font-size:13px; letter-spacing:.04em; color:var(--text); margin-right:2px; cursor:pointer; max-width:26vw; overflow:hidden; text-overflow:ellipsis}
+  @media (max-width: 860px){ #projTitle{display:none} .fps input{width:70px} }
+  .spacer{flex:1}
   .fps{display:flex; flex:0 0 auto; align-items:center; gap:8px; padding:0 8px; color:var(--muted); font-size:12px}
   .fps input{width:110px}
-  input[type=range]{accent-color:var(--accent)}
   .fps b{font-family:var(--mono); color:var(--text); font-size:13px; width:34px; text-align:right}
 
-  /* ---- middle ---- */
   #middle{flex:1; display:flex; min-height:0}
   #tools{
     width:66px; flex:0 0 auto; background:var(--panel); border-right:1px solid var(--line);
@@ -76,24 +108,29 @@
   }
   .tbtn.on{background:var(--accent); border-color:var(--accent); color:#0e1418}
   .tbtn svg{width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round}
-  .lbl{font-size:10px; color:var(--muted); letter-spacing:.08em; white-space:nowrap}
-  /* 縦スライダー: 新しいSafariは writing-mode、古いSafariは -webkit-appearance */
-  #size{width:46px; height:110px; -webkit-appearance:slider-vertical; writing-mode:vertical-lr; direction:rtl; accent-color:var(--accent)}
+  #size{width:46px; height:100px; -webkit-appearance:slider-vertical; writing-mode:vertical-lr; direction:rtl; accent-color:var(--accent)}
   #sizeVal{font-family:var(--mono); font-size:11px; color:var(--muted)}
   #swatches{display:grid; grid-template-columns:repeat(2,1fr); gap:5px; padding:0 8px; width:100%}
   .sw{aspect-ratio:1; border-radius:50%; border:2px solid transparent; box-shadow:0 0 0 1px #0006 inset}
   .sw.on{border-color:var(--accent)}
   #custom{width:50px; height:26px; border:1px solid var(--line); border-radius:6px; background:none; padding:1px}
 
-  #stage{flex:1; display:flex; align-items:center; justify-content:center; min-width:0; position:relative; background:
+  #stage{flex:1; display:flex; align-items:center; justify-content:center; min-width:0; position:relative; overflow:hidden; background:
     repeating-conic-gradient(#1b1e24 0% 25%, #191c22 0% 50%) 50%/22px 22px;}
-  #wrap{position:relative; background:#fff; box-shadow:0 12px 40px #0009; border-radius:2px; overflow:hidden}
+  #wrap{position:relative; background:#fff; box-shadow:0 12px 40px #0009; border-radius:2px; overflow:hidden; will-change:transform;}
   #wrap canvas{position:absolute; inset:0; width:100%; height:100%; touch-action:none; display:block}
+  #bg, #onion, #layersBelow, #layersAbove, #player{pointer-events:none}
   #onion{opacity:.85}
   #player{background:#fff}
   #player[hidden]{display:none}
 
-  /* ---- filmstrip = timesheet ---- */
+  #floatCtrl{position:absolute; right:14px; bottom:14px; display:flex; flex-direction:column; align-items:flex-end; gap:8px; z-index:5;}
+  #zoomRow{display:flex; align-items:center; gap:6px; background:#12141aee; border:1px solid var(--line); border-radius:10px; padding:6px 8px;}
+  #zoomRow input[type=range]{width:96px}
+  #zoomVal{width:38px; text-align:right; font-family:var(--mono); font-size:11px; color:var(--muted); cursor:pointer}
+  #undoRow{display:flex; gap:8px;}
+  #undoRow .tbtn{width:44px; height:44px; background:#12141aee;}
+
   #sheet{
     height:112px; flex:0 0 auto; background:var(--panel); border-top:1px solid var(--line);
     display:flex; align-items:stretch;
@@ -108,7 +145,7 @@
   .legend .p{color:var(--prev)} .legend .n{color:var(--next)}
   #strip{flex:1; display:flex; gap:8px; align-items:center; overflow-x:auto; padding:8px 10px; -webkit-overflow-scrolling:touch}
   .cell{flex:0 0 auto; width:104px; cursor:pointer; position:relative}
-  .cell canvas{width:104px; height:58.5px; background:#fff; border-radius:3px; border:1px solid var(--line); display:block}
+  .cell canvas{width:104px; height:58.5px; background:#fff; border-radius:3px; border:1px solid var(--line); display:block; object-fit:contain}
   .cell.on canvas{border-color:var(--accent); box-shadow:0 0 0 2px var(--accent)}
   .cell .no{
     font-family:var(--mono); font-size:10px; color:var(--muted); text-align:center; padding-top:3px;
@@ -129,28 +166,78 @@
   .sheetpop[hidden]{display:none}
   .card{
     background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:18px;
-    width:min(380px, 86vw); display:flex; flex-direction:column; gap:12px;
+    width:min(400px, 88vw); display:flex; flex-direction:column; gap:12px; max-height:86vh; overflow-y:auto;
   }
   .card h2{font-size:15px; font-weight:600; letter-spacing:.04em}
   .card p{font-size:12.5px; color:var(--muted); line-height:1.7}
-  .row{display:flex; gap:8px; align-items:center}
+  .row{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
   .row select{
     flex:1; height:32px; background:var(--panel-2); color:var(--text);
     border:1px solid var(--line); border-radius:8px; font-size:13px; padding:0 8px;
   }
+  .textInput{
+    flex:1; height:36px; background:var(--panel-2); color:var(--text);
+    border:1px solid var(--line); border-radius:8px; padding:0 10px; font-size:14px; font-family:var(--ui);
+  }
+  .numInput{
+    width:84px; height:34px; background:var(--panel-2); color:var(--text);
+    border:1px solid var(--line); border-radius:8px; text-align:center; font-size:14px; font-family:var(--mono);
+  }
   #bar{height:4px; background:var(--panel-2); border-radius:3px; overflow:hidden}
   #bar i{display:block; height:100%; width:0%; background:var(--accent); transition:width .15s}
-  @media (prefers-reduced-motion: reduce){*{transition:none !important; animation:none !important}}
-  :focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+  #layerList{display:flex; flex-direction:column; gap:6px; max-height:38vh; overflow-y:auto; -webkit-overflow-scrolling:touch}
+  .layerRow{display:flex; align-items:center; gap:8px; padding:6px; border:1px solid var(--line); border-radius:9px; background:var(--panel-2)}
+  .layerRow.on{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent) inset}
+  .layerEye{width:30px; height:30px; flex:0 0 auto; border:1px solid var(--line); border-radius:7px; background:var(--panel); color:var(--text); font-size:14px}
+  .layerThumb{width:52px; height:29px; flex:0 0 auto; border-radius:4px; border:1px solid var(--line); background:#fff}
+  .layerName{flex:1; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .layerRow .tbtn{width:30px; height:30px; font-size:13px; flex:0 0 auto}
 </style>
 </head>
 <body>
+
+<!-- ==================== ホーム画面 ==================== -->
+<div id="home">
+  <header id="homeTop">
+    <span class="brand">コマドリ</span>
+    <span class="spacer"></span>
+  </header>
+  <div id="projList"></div>
+  <button id="newProjBtn" title="新規プロジェクト">＋</button>
+</div>
+
+<!-- 新規プロジェクト -->
+<div class="sheetpop" id="newProjPop" hidden>
+  <div class="card">
+    <h2>新規プロジェクト</h2>
+    <div class="row"><input id="projName" class="textInput" placeholder="プロジェクト名（未入力なら自動）"></div>
+    <p class="lbl">キャンバスサイズ</p>
+    <div class="row">
+      <button class="btn preset on" data-k="16:9">16:9 横<br>1280×720</button>
+      <button class="btn preset" data-k="9:16">9:16 縦<br>720×1280</button>
+      <button class="btn preset" data-k="1:1">正方形<br>1080×1080</button>
+      <button class="btn preset" data-k="4:3">4:3 横<br>1200×900</button>
+      <button class="btn preset" data-k="custom">カスタム</button>
+    </div>
+    <div class="row" id="customSize" style="display:none">
+      <input id="customW" class="numInput" type="number" inputmode="numeric" min="64" max="4096" value="1280">
+      <span class="lbl">× 幅</span>
+      <input id="customH" class="numInput" type="number" inputmode="numeric" min="64" max="4096" value="720">
+      <span class="lbl">高さ（px）</span>
+    </div>
+    <div class="row">
+      <button class="btn wide" id="projCancel" style="flex:1">キャンセル</button>
+      <button class="btn wide on" id="projCreate" style="flex:1">作成</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== エディタ画面 ==================== -->
 <div id="app">
 
   <header id="topbar">
-    <span class="brand">コマドリ</span>
-    <button class="btn" id="undo" title="取り消し">↶</button>
-    <button class="btn" id="redo" title="やり直し">↷</button>
+    <button class="btn" id="backHome" title="ホームへ">← ホーム</button>
+    <span class="brand" id="projTitle" title="タップで名前を変更">無題</span>
     <button class="btn wide" id="play">▶ 再生</button>
     <div class="fps">
       <span>fps</span>
@@ -159,7 +246,9 @@
     </div>
     <span class="spacer"></span>
     <button class="btn" id="onionBtn">オニオン: 1枚</button>
+    <button class="btn" id="layerBtn">レイヤー</button>
     <button class="btn" id="pencilOnly">指OK</button>
+    <button class="btn" id="pressureBtn">筆圧オン</button>
     <button class="btn wide" id="exportBtn">書き出し</button>
     <button class="btn" id="menuBtn">…</button>
   </header>
@@ -172,6 +261,10 @@
       <button class="tbtn" id="eraser" title="消しゴム">
         <svg viewBox="0 0 24 24"><path d="M8 20h11"/><path d="M15 5l5 5-8 8H7l-3-3 11-10z"/></svg>
       </button>
+      <button class="tbtn" id="bucket" title="バケツ塗り">
+        <svg viewBox="0 0 24 24"><path d="M3 11l8-8 9 9-8 8-9-9z"/><path d="M11 3l7 7"/><path d="M4 14c3 4 8 6 12 3"/><circle cx="19" cy="18" r="1.6"/></svg>
+      </button>
+      <button class="tbtn" id="swapTool" title="ペン/消しゴムを入れ替え">⇄</button>
       <span class="lbl">太さ</span>
       <input type="range" id="size" min="1" max="60" step="1" value="6" orient="vertical">
       <span id="sizeVal">6</span>
@@ -182,9 +275,24 @@
 
     <section id="stage">
       <div id="wrap">
+        <canvas id="bg"></canvas>
         <canvas id="onion"></canvas>
+        <canvas id="layersBelow"></canvas>
         <canvas id="paper"></canvas>
+        <canvas id="layersAbove"></canvas>
         <canvas id="player" hidden></canvas>
+      </div>
+      <div id="floatCtrl">
+        <div id="zoomRow">
+          <button class="tbtn" id="zoomOut" title="縮小">－</button>
+          <input type="range" id="zoom" min="100" max="400" step="10" value="100">
+          <button class="tbtn" id="zoomIn" title="拡大">＋</button>
+          <span id="zoomVal" title="タップで100%に戻す">100%</span>
+        </div>
+        <div id="undoRow">
+          <button class="tbtn" id="undo" title="取り消し">↶</button>
+          <button class="tbtn" id="redo" title="やり直し">↷</button>
+        </div>
       </div>
     </section>
   </div>
@@ -213,16 +321,14 @@
     <p>作ったコマを1つのファイルにまとめます。保存先は共有シート、またはダウンロードです。</p>
     <div class="row">
       <span class="lbl">サイズ</span>
-      <select id="expScale">
-        <option value="0.5" selected>50%（640×360・軽い）</option>
-        <option value="1">100%（1280×720）</option>
-        <option value="0.25">25%（320×180）</option>
-      </select>
+      <select id="expScale"></select>
     </div>
     <div class="row">
+      <button class="btn wide" id="expMp4" style="flex:1 1 100%">MP4で書き出す（インスタ等向け）</button>
       <button class="btn wide" id="expGif" style="flex:1">GIFで書き出す</button>
       <button class="btn wide" id="expPng" style="flex:1">PNG連番（ZIP）</button>
     </div>
+    <p class="lbl" id="mp4Note">MP4は実際の再生時間と同じだけ書き出しに時間がかかります。</p>
     <div class="row"><button class="btn" id="expClose" style="flex:1">閉じる</button></div>
   </div>
 </div>
@@ -232,8 +338,65 @@
   <div class="card">
     <h2>メニュー</h2>
     <p>作業内容はこの端末の中（IndexedDB）に自動保存されます。サーバーには何も送りません。</p>
-    <button class="btn" id="clearAll">全部消して新規作成</button>
+    <button class="btn" id="renameProj">プロジェクト名を変更</button>
+    <button class="btn" id="bgMenuBtn">背景を変更</button>
+    <button class="btn" id="deleteProjBtn">このプロジェクトを削除</button>
     <button class="btn" id="menuClose">閉じる</button>
+  </div>
+</div>
+
+<!-- 背景 -->
+<div class="sheetpop" id="bgPop" hidden>
+  <div class="card">
+    <h2>キャンバスの背景</h2>
+    <div class="row">
+      <button class="btn bgtab on" data-t="color" style="flex:1">単色</button>
+      <button class="btn bgtab" data-t="pattern" style="flex:1">柄</button>
+      <button class="btn bgtab" data-t="photo" style="flex:1">写真</button>
+    </div>
+    <div id="bgColorPane">
+      <div class="row" id="bgSwatches"></div>
+      <div class="row">
+        <span class="lbl">その他の色</span>
+        <input type="color" id="bgCustomColor" value="#ffffff">
+      </div>
+    </div>
+    <div id="bgPatternPane" style="display:none">
+      <div class="row" id="bgPatterns"></div>
+    </div>
+    <div id="bgPhotoPane" style="display:none">
+      <div class="row">
+        <button class="btn wide" id="bgPhotoPick" style="flex:1">写真を選ぶ</button>
+        <button class="btn" id="bgPhotoClear">削除</button>
+      </div>
+      <canvas id="bgPhotoPreview" style="width:100%;border-radius:8px;border:1px solid var(--line);background:#111"></canvas>
+      <input type="file" id="bgFileInput" accept="image/*" hidden>
+    </div>
+    <p class="lbl">背景は絵の後ろに表示され、書き出しにも反映されます。</p>
+    <div class="row">
+      <button class="btn wide" id="bgCancel" style="flex:1">キャンセル</button>
+      <button class="btn wide on" id="bgApply" style="flex:1">適用</button>
+    </div>
+  </div>
+</div>
+
+<!-- レイヤー -->
+<div class="sheetpop" id="layerPop" hidden>
+  <div class="card">
+    <h2>レイヤー</h2>
+    <p class="lbl">上のレイヤーほど手前に表示されます。タップで描く対象を切替。</p>
+    <div id="layerList"></div>
+    <div class="row">
+      <button class="btn wide" id="layerAdd" style="flex:1">＋追加</button>
+      <button class="btn wide" id="layerDup" style="flex:1">複製</button>
+      <button class="btn wide" id="layerDel" style="flex:1">削除</button>
+    </div>
+    <div class="row">
+      <button class="btn wide" id="layerCopy" style="flex:1">コピー</button>
+      <button class="btn wide" id="layerPaste" style="flex:1" disabled>このコマに貼り付け</button>
+    </div>
+    <p class="lbl">「コピー」→ 別のコマに移動 →「このコマに貼り付け」で、レイヤーを他のページへ複製できます。</p>
+    <div class="row"><button class="btn wide" id="layerClose" style="flex:1">閉じる</button></div>
   </div>
 </div>
 
@@ -248,42 +411,53 @@
 
 <script>
 /* =========================================================
-   コマドリ — 手描きコマアニメ PWA
+   コマドリ — 手描きコマアニメ PWA (v2: 複数プロジェクト対応)
    すべて端末内で完結します（外部送信なし）
    ========================================================= */
-const W = 1280, H = 720;                 // 作画解像度
 const $ = s => document.querySelector(s);
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 
+let W = 1280, H = 720;                    // 現在開いているプロジェクトの作画解像度
+const bg     = $('#bg'),    bgctx = bg.getContext('2d');
 const paper  = $('#paper'),  pctx = paper.getContext('2d');
 const onion  = $('#onion'),  octx = onion.getContext('2d');
+const below  = $('#layersBelow'), belowctx = below.getContext('2d');
+const above  = $('#layersAbove'), abovectx = above.getContext('2d');
 const player = $('#player'), plctx = player.getContext('2d');
-[paper, onion, player].forEach(c => { c.width = W; c.height = H; });
-
-const tint = document.createElement('canvas'); tint.width = W; tint.height = H;
+const tint = document.createElement('canvas');
 const tctx = tint.getContext('2d');
 
 const state = {
-  frames: [],            // {id, blob, img}
+  projectId: null,
+  proj: null,             // {id,name,w,h,createdAt,updatedAt}
+  frames: [],              // {id, layers:[{id,blob,img,name,visible}], active, img(合成キャッシュ)}
   cur: 0,
   fps: 12,
   tool: 'pen',
   size: 6,
   color: '#1a1a1a',
-  onion: 1,              // 0/1/2
+  onion: 1,                // 0/1/2
   pencilOnly: false,
-  playing: false
+  pressureEnabled: true,
+  playing: false,
+  zoom: 1,
+  panX: 0,
+  panY: 0,
+  layerClipboard: null
 };
 let undoStack = [], redoStack = [], playTimer = null, db = null;
+const currentFrame = () => state.frames[state.cur];
 
 /* ---------------- IndexedDB ---------------- */
 function openDB(){
   return new Promise((res, rej) => {
-    const r = indexedDB.open('komadori', 1);
+    const r = indexedDB.open('komadori', 3);
     r.onupgradeneeded = () => {
       const d = r.result;
-      if (!d.objectStoreNames.contains('frames')) d.createObjectStore('frames');
-      if (!d.objectStoreNames.contains('meta'))   d.createObjectStore('meta');
+      if (!d.objectStoreNames.contains('frames'))   d.createObjectStore('frames');
+      if (!d.objectStoreNames.contains('meta'))     d.createObjectStore('meta');
+      if (!d.objectStoreNames.contains('projects')) d.createObjectStore('projects');
+      if (!d.objectStoreNames.contains('bgphotos')) d.createObjectStore('bgphotos');
     };
     r.onsuccess = () => res(r.result);
     r.onerror   = () => rej(r.error);
@@ -301,22 +475,27 @@ const idbDel = (s, k) => new Promise((res) => {
   const r = db.transaction(s, 'readwrite').objectStore(s).delete(k);
   r.onsuccess = () => res(); r.onerror = () => res();
 });
-const idbClear = (s) => new Promise((res) => {
-  const r = db.transaction(s, 'readwrite').objectStore(s).clear();
-  r.onsuccess = () => res(); r.onerror = () => res();
+const idbGetAll = (s) => new Promise((res, rej) => {
+  const out = [];
+  const r = db.transaction(s, 'readonly').objectStore(s).openCursor();
+  r.onsuccess = () => {
+    const cur = r.result;
+    if (cur){ out.push({ key: cur.key, value: cur.value }); cur.continue(); }
+    else res(out);
+  };
+  r.onerror = () => rej(r.error);
 });
-
-let metaTimer = null;
-function saveMeta(){
-  clearTimeout(metaTimer);
-  metaTimer = setTimeout(() => {
-    idbPut('meta', 'project', {
-      order: state.frames.map(f => f.id),
-      cur: state.cur, fps: state.fps, onion: state.onion,
-      size: state.size, color: state.color, pencilOnly: state.pencilOnly
-    }).catch(()=>{});
-  }, 250);
-}
+const idbDeletePrefix = (s, prefix) => new Promise((res, rej) => {
+  const range = IDBKeyRange.bound(prefix, prefix + '\uffff');
+  const r = db.transaction(s, 'readwrite').objectStore(s).openCursor(range);
+  r.onsuccess = () => {
+    const cur = r.result;
+    if (cur){ cur.delete(); cur.continue(); } else res();
+  };
+  r.onerror = () => rej(r.error);
+});
+const fkey = id => `${state.projectId}:${id}`;                       // 旧形式(移行専用)
+const lkey = (frameId, layerId) => `${state.projectId}:${frameId}:${layerId}`;
 
 async function toImg(blob){
   if (!blob) return null;
@@ -328,6 +507,298 @@ async function toImg(blob){
   });
 }
 
+/* ---------------- 旧バージョンのデータを移行 ---------------- */
+async function migrateLegacyIfNeeded(){
+  const legacy = await idbGet('meta', 'project').catch(() => null);
+  if (!legacy || !legacy.order || !legacy.order.length) { if (legacy) await idbDel('meta','project'); return; }
+  const pid = 'p_' + uid();
+  for (const fid of legacy.order){
+    const blob = await idbGet('frames', fid).catch(() => null);
+    if (blob) await idbPut('frames', `${pid}:${fid}`, blob).catch(()=>{});
+    await idbDel('frames', fid);
+  }
+  await idbPut('meta', pid, {
+    order: legacy.order, cur: legacy.cur ?? 0, fps: legacy.fps ?? 12,
+    onion: legacy.onion ?? 1, size: legacy.size ?? 6, color: legacy.color ?? '#1a1a1a',
+    pencilOnly: !!legacy.pencilOnly, zoom: 1
+  });
+  await idbPut('projects', pid, {
+    id: pid, name: '最初の作品', w: 1280, h: 720,
+    createdAt: Date.now(), updatedAt: Date.now()
+  });
+  await idbDel('meta', 'project');
+}
+
+/* ---------------- 画面切り替え ---------------- */
+function showScreen(name){
+  $('#home').style.display = name === 'home' ? 'flex' : 'none';
+  $('#app').style.display  = name === 'app'  ? 'flex' : 'none';
+}
+
+/* ---------------- ホーム画面 ---------------- */
+function relTime(ts){
+  if (!ts) return '';
+  const s = Math.max(0, (Date.now() - ts) / 1000);
+  if (s < 60) return 'たった今';
+  if (s < 3600) return Math.floor(s / 60) + '分前';
+  if (s < 86400) return Math.floor(s / 3600) + '時間前';
+  if (s < 86400 * 7) return Math.floor(s / 86400) + '日前';
+  const d = new Date(ts);
+  return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
+}
+async function renderHome(){
+  const list = $('#projList');
+  const rows = await idbGetAll('projects');
+  const arr = rows.map(r => r.value).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+  list.innerHTML = '';
+  if (!arr.length){
+    list.innerHTML = '<p class="empty">プロジェクトがありません。<br>右下の＋から新しく作成してください。</p>';
+    return;
+  }
+  for (const proj of arr){
+    const card = document.createElement('div');
+    card.className = 'projCard';
+    const c = document.createElement('canvas');
+    c.width = 208; c.height = Math.max(1, Math.round(208 * proj.h / proj.w));
+    card.appendChild(c);
+    const info = document.createElement('div'); info.className = 'projInfo';
+    const nm = document.createElement('div'); nm.className = 'projName'; nm.textContent = proj.name;
+    const dt = document.createElement('div'); dt.className = 'projDate';
+    dt.textContent = `${relTime(proj.updatedAt)} ・ ${proj.w}×${proj.h}`;
+    info.append(nm, dt);
+    card.appendChild(info);
+    const del = document.createElement('button'); del.className = 'projDel'; del.textContent = '✕';
+    del.addEventListener('click', async ev => {
+      ev.stopPropagation();
+      if (!confirm(`「${proj.name}」を削除します。元に戻せません。よろしいですか？`)) return;
+      await deleteProject(proj.id);
+      renderHome();
+    });
+    card.appendChild(del);
+    card.addEventListener('click', () => openProject(proj.id));
+    list.appendChild(card);
+    (async () => {
+      const meta = await idbGet('meta', proj.id).catch(() => null);
+      const x = c.getContext('2d');
+      await drawBackgroundFor(x, c.width, c.height, proj);
+      if (meta && meta.order && meta.order.length){
+        const blob = await idbGet('frames', `${proj.id}:${meta.order[0]}`).catch(() => null);
+        if (blob){ const img = await toImg(blob); if (img) x.drawImage(img, 0, 0, c.width, c.height); }
+      }
+    })();
+  }
+}
+async function deleteProject(pid){
+  await idbDeletePrefix('frames', pid + ':');
+  await idbDel('meta', pid);
+  await idbDel('projects', pid);
+  await idbDel('bgphotos', pid).catch(()=>{});
+}
+
+/* ---------------- キャンバス背景（色・柄・写真） ---------------- */
+const PATTERNS = {
+  grid: (ctx, w, h) => {
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, w, h);
+    ctx.strokeStyle = '#d8dbe0'; ctx.lineWidth = Math.max(1, w / 700);
+    const step = Math.max(4, Math.round(w / 20));
+    for (let x = 0; x <= w; x += step) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke(); }
+    for (let y = 0; y <= h; y += step) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
+  },
+  dot: (ctx, w, h) => {
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = '#c7cbd1';
+    const step = Math.max(4, Math.round(w / 26)), r = Math.max(1, w / 500);
+    for (let y = step / 2; y < h; y += step)
+      for (let x = step / 2; x < w; x += step) { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); }
+  },
+  graph: (ctx, w, h) => {
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, w, h);
+    const step = Math.max(3, Math.round(w / 40));
+    ctx.strokeStyle = '#e6eaf0'; ctx.lineWidth = Math.max(1, w / 900);
+    for (let x = 0; x <= w; x += step) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke(); }
+    for (let y = 0; y <= h; y += step) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
+    ctx.strokeStyle = '#c3cad4'; ctx.lineWidth = Math.max(1, w / 500);
+    for (let x = 0; x <= w; x += step * 5) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke(); }
+    for (let y = 0; y <= h; y += step * 5) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
+  },
+  lines: (ctx, w, h) => {
+    ctx.fillStyle = '#fffdf6'; ctx.fillRect(0, 0, w, h);
+    const step = Math.max(6, Math.round(h / 18));
+    ctx.strokeStyle = '#cdd6e0'; ctx.lineWidth = Math.max(1, h / 700);
+    for (let y = step; y < h; y += step) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
+  }
+};
+async function drawBackgroundFor(ctx, w, h, proj){
+  const b = (proj && proj.bg) || { type: 'color', color: '#ffffff' };
+  if (b.type === 'photo'){
+    const blob = await idbGet('bgphotos', proj.id).catch(() => null);
+    const img = blob ? await toImg(blob) : null;
+    if (img){ ctx.drawImage(img, 0, 0, w, h); return; }
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, w, h); return;
+  }
+  if (b.type === 'pattern' && PATTERNS[b.pattern]){ PATTERNS[b.pattern](ctx, w, h); return; }
+  ctx.fillStyle = b.color || '#ffffff';
+  ctx.fillRect(0, 0, w, h);
+}
+async function rebuildThumbBg(){
+  const ratio = H / W;
+  const tw = 208, th = Math.max(1, Math.round(208 * ratio));
+  const c = document.createElement('canvas'); c.width = tw; c.height = th;
+  await drawBackgroundFor(c.getContext('2d'), tw, th, state.proj);
+  state.thumbBg = c;
+}
+
+/* ---------------- 新規プロジェクト ---------------- */
+const PRESETS = { '16:9': [1280, 720], '9:16': [720, 1280], '1:1': [1080, 1080], '4:3': [1200, 900] };
+let sizePreset = '16:9';
+function selectPreset(key){
+  sizePreset = key;
+  document.querySelectorAll('.preset').forEach(b => b.classList.toggle('on', b.dataset.k === key));
+  $('#customSize').style.display = key === 'custom' ? 'flex' : 'none';
+}
+document.querySelectorAll('.preset').forEach(b => b.onclick = () => selectPreset(b.dataset.k));
+$('#newProjBtn').onclick = () => {
+  $('#projName').value = '';
+  $('#customW').value = 1280; $('#customH').value = 720;
+  selectPreset('16:9');
+  $('#newProjPop').hidden = false;
+};
+$('#projCancel').onclick = () => { $('#newProjPop').hidden = true; };
+$('#projCreate').onclick = async () => {
+  let w, h;
+  if (sizePreset === 'custom'){
+    w = Math.max(64, Math.min(4096, Math.round(+$('#customW').value) || 1280));
+    h = Math.max(64, Math.min(4096, Math.round(+$('#customH').value) || 720));
+  } else {
+    [w, h] = PRESETS[sizePreset];
+  }
+  const name = $('#projName').value.trim() || `無題のプロジェクト`;
+  const pid = 'p_' + uid();
+  await idbPut('projects', pid, { id: pid, name, w, h, createdAt: Date.now(), updatedAt: Date.now(), bg: { type: 'color', color: '#ffffff' } });
+  $('#newProjPop').hidden = true;
+  await openProject(pid);
+};
+
+/* ---------------- プロジェクトを開く ---------------- */
+async function openProject(pid){
+  stop();
+  const proj = await idbGet('projects', pid);
+  if (!proj) return;
+  state.projectId = pid;
+  state.proj = proj;
+  if (!state.proj.bg) state.proj.bg = { type: 'color', color: '#ffffff' };
+  W = proj.w; H = proj.h;
+  [bg, paper, onion, below, above, player, tint].forEach(c => { c.width = W; c.height = H; });
+  await drawBackgroundFor(bgctx, W, H, state.proj);
+  await rebuildThumbBg();
+
+  state.frames = []; state.cur = 0; state.zoom = 1; state.panX = 0; state.panY = 0;
+  state.layerClipboard = null;
+  undoStack = []; redoStack = [];
+
+  const meta = await idbGet('meta', pid).catch(() => null);
+  if (meta && meta.order && meta.order.length){
+    state.fps = meta.fps ?? 12; state.onion = meta.onion ?? 1;
+    state.size = meta.size ?? 6; state.color = meta.color ?? '#1a1a1a';
+    state.pencilOnly = !!meta.pencilOnly; state.zoom = meta.zoom || 1;
+    state.pressureEnabled = meta.pressureEnabled ?? true;
+    for (const fdesc of meta.order){
+      if (typeof fdesc === 'string'){
+        // 旧形式(レイヤー未対応時代)のコマを1レイヤーとして移行
+        const oldBlob = await idbGet('frames', fkey(fdesc)).catch(() => null);
+        const layerId = uid();
+        if (oldBlob) await idbPut('frames', lkey(fdesc, layerId), oldBlob).catch(()=>{});
+        await idbDel('frames', fkey(fdesc)).catch(()=>{});
+        const layer = { id: layerId, blob: oldBlob || null, img: await toImg(oldBlob), name: 'レイヤー1', visible: true };
+        state.frames.push({ id: fdesc, layers: [layer], active: layerId, img: null });
+      } else {
+        const layers = [];
+        for (const ldesc of fdesc.layers){
+          const blob = await idbGet('frames', lkey(fdesc.id, ldesc.id)).catch(() => null);
+          layers.push({ id: ldesc.id, blob: blob || null, img: await toImg(blob), name: ldesc.name || 'レイヤー', visible: ldesc.visible !== false });
+        }
+        if (!layers.length) layers.push({ id: uid(), blob: null, img: null, name: 'レイヤー1', visible: true });
+        state.frames.push({ id: fdesc.id, layers, active: fdesc.active || layers[0].id, img: null });
+      }
+    }
+    state.cur = Math.min(meta.cur ?? 0, state.frames.length - 1);
+  } else {
+    state.fps = 12; state.onion = 1; state.size = 6; state.color = '#1a1a1a'; state.pencilOnly = false;
+    state.pressureEnabled = true;
+    const layerId = uid();
+    state.frames = [{ id: uid(), layers: [{ id: layerId, blob: null, img: null, name: 'レイヤー1', visible: true }], active: layerId, img: null }];
+  }
+  state.frames.forEach(recompositeFrame);
+
+  $('#projTitle').textContent = proj.name;
+  showScreen('app');
+  buildSwatches(); syncTools(); refreshUndo(); fit(); applyZoom();
+  await showFrame(state.cur);
+}
+$('#backHome').onclick = () => { stop(); showScreen('home'); renderHome(); };
+$('#projTitle').onclick = async () => {
+  const name = prompt('プロジェクト名', state.proj.name);
+  if (name && name.trim()){
+    state.proj.name = name.trim();
+    $('#projTitle').textContent = state.proj.name;
+    state.proj.updatedAt = Date.now();
+    await idbPut('projects', state.projectId, state.proj).catch(()=>{});
+  }
+};
+
+let metaTimer = null;
+function saveMeta(){
+  clearTimeout(metaTimer);
+  metaTimer = setTimeout(() => {
+    idbPut('meta', state.projectId, {
+      order: state.frames.map(f => ({
+        id: f.id, active: f.active,
+        layers: f.layers.map(l => ({ id: l.id, name: l.name, visible: l.visible !== false }))
+      })),
+      cur: state.cur, fps: state.fps, onion: state.onion,
+      size: state.size, color: state.color, pencilOnly: state.pencilOnly, zoom: state.zoom, pressureEnabled: state.pressureEnabled
+    }).catch(()=>{});
+    if (state.proj){
+      state.proj.updatedAt = Date.now();
+      idbPut('projects', state.projectId, state.proj).catch(()=>{});
+    }
+  }, 250);
+}
+
+/* ---------------- レイヤー合成 ---------------- */
+function recompositeFrame(frame){
+  const c = document.createElement('canvas'); c.width = W; c.height = H;
+  const cx = c.getContext('2d');
+  for (const layer of frame.layers){
+    if (layer.visible === false) continue;
+    if (layer.img) cx.drawImage(layer.img, 0, 0, W, H);
+  }
+  frame.img = c;
+}
+function refreshLayerSplit(){
+  const frame = currentFrame();
+  belowctx.clearRect(0, 0, W, H); abovectx.clearRect(0, 0, W, H);
+  const idx = frame.layers.findIndex(l => l.id === frame.active);
+  frame.layers.forEach((layer, i) => {
+    if (layer.visible === false || !layer.img) return;
+    if (i < idx) belowctx.drawImage(layer.img, 0, 0, W, H);
+    else if (i > idx) abovectx.drawImage(layer.img, 0, 0, W, H);
+  });
+}
+function loadActiveLayerIntoPaper(){
+  const frame = currentFrame();
+  const layer = frame.layers.find(l => l.id === frame.active);
+  pctx.clearRect(0, 0, W, H);
+  if (layer && layer.img) pctx.drawImage(layer.img, 0, 0, W, H);
+}
+function recompositeAndSave(){
+  recompositeFrame(currentFrame());
+  drawThumb(state.cur);
+  drawOnion();
+  saveMeta();
+}
+
+
 /* ---------------- 描画キャンバスの表示サイズ ---------------- */
 function fit(){
   const r = $('#stage').getBoundingClientRect();
@@ -337,18 +808,72 @@ function fit(){
   wrap.style.width = Math.floor(w) + 'px';
   wrap.style.height = Math.floor(h) + 'px';
 }
-addEventListener('resize', fit);
-addEventListener('orientationchange', () => setTimeout(fit, 300));
+addEventListener('resize', () => { if ($('#app').style.display !== 'none'){ fit(); setZoom(1); } });
+addEventListener('orientationchange', () => setTimeout(() => { if ($('#app').style.display !== 'none'){ fit(); setZoom(1); } }, 300));
+
+/* ---------------- ズーム / パン ---------------- */
+function clampPan(){
+  const r = $('#stage').getBoundingClientRect();
+  const maxX = (r.width  * (state.zoom - 1)) / 2 + 60;
+  const maxY = (r.height * (state.zoom - 1)) / 2 + 60;
+  state.panX = Math.max(-maxX, Math.min(maxX, state.panX));
+  state.panY = Math.max(-maxY, Math.min(maxY, state.panY));
+}
+function applyZoom(){
+  $('#wrap').style.transform = `translate(${state.panX}px, ${state.panY}px) scale(${state.zoom})`;
+  $('#zoom').value = Math.round(state.zoom * 100);
+  $('#zoomVal').textContent = Math.round(state.zoom * 100) + '%';
+}
+function setZoom(z){
+  z = Math.max(1, Math.min(4, z));
+  state.zoom = z;
+  if (z === 1){ state.panX = 0; state.panY = 0; }
+  clampPan(); applyZoom();
+}
+$('#zoom').oninput  = e => { setZoom(+e.target.value / 100); saveMeta(); };
+$('#zoomIn').onclick  = () => { setZoom(state.zoom + 0.2); saveMeta(); };
+$('#zoomOut').onclick = () => { setZoom(state.zoom - 0.2); saveMeta(); };
+$('#zoomVal').onclick = () => { setZoom(1); saveMeta(); };
+
+let pinch = null;
+const touchDist = (a, b) => Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+const touchMid  = (a, b) => ({ x: (a.clientX + b.clientX) / 2, y: (a.clientY + b.clientY) / 2 });
+$('#stage').addEventListener('touchstart', e => {
+  if (e.touches.length >= 2){
+    if (drawing && activePointerType === 'pen') return;      // ペンで描いている最中は無視
+    if (drawing) endStroke();
+    e.preventDefault();
+    const [t0, t1] = e.touches;
+    const m = touchMid(t0, t1);
+    pinch = { d0: touchDist(t0, t1), z0: state.zoom, mx: m.x, my: m.y, px0: state.panX, py0: state.panY };
+  }
+}, { passive: false });
+$('#stage').addEventListener('touchmove', e => {
+  if (pinch && e.touches.length >= 2){
+    e.preventDefault();
+    const [t0, t1] = e.touches;
+    const scaleDelta = touchDist(t0, t1) / pinch.d0;
+    state.zoom = Math.max(1, Math.min(4, pinch.z0 * scaleDelta));
+    const m = touchMid(t0, t1);
+    state.panX = pinch.px0 + (m.x - pinch.mx);
+    state.panY = pinch.py0 + (m.y - pinch.my);
+    clampPan(); applyZoom();
+  }
+}, { passive: false });
+function endPinch(){ if (pinch){ pinch = null; saveMeta(); } }
+$('#stage').addEventListener('touchend', endPinch);
+$('#stage').addEventListener('touchcancel', endPinch);
 
 /* ---------------- 描画 ---------------- */
-let drawing = false, last = null, activeId = null;
+let drawing = false, last = null, activeId = null, activePointerType = null;
+let ptBuf = [], smWidth = 0;
 
 function toCanvas(e){
   const r = paper.getBoundingClientRect();
   return { x: (e.clientX - r.left) * (W / r.width), y: (e.clientY - r.top) * (H / r.height) };
 }
 function widthFor(e){
-  if (e.pointerType === 'pen') {
+  if (e.pointerType === 'pen' && state.pressureEnabled) {
     const p = e.pressure > 0 ? e.pressure : 0.5;
     return Math.max(0.6, state.size * (0.35 + 0.9 * p));
   }
@@ -368,21 +893,94 @@ function segment(a, b, w){
   pctx.lineWidth = w;
   pctx.beginPath(); pctx.moveTo(a.x, a.y); pctx.lineTo(b.x, b.y); pctx.stroke();
 }
+const midPoint = (a, b) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
+function strokeQuad(p0, p1, p2, w){
+  const m1 = midPoint(p0, p1), m2 = midPoint(p1, p2);
+  pctx.lineWidth = w;
+  pctx.beginPath();
+  pctx.moveTo(m1.x, m1.y);
+  pctx.quadraticCurveTo(p1.x, p1.y, m2.x, m2.y);
+  pctx.stroke();
+}
+
+/* ---- バケツ塗り ---- */
+function hexToRgba(hex){
+  const v = hex.replace('#', '');
+  return [parseInt(v.substring(0, 2), 16), parseInt(v.substring(2, 4), 16), parseInt(v.substring(4, 6), 16), 255];
+}
+function floodFill(imgData, startX, startY, fill, tolerance){
+  const w = imgData.width, h = imgData.height, data = imgData.data;
+  const idx = (x, y) => (y * w + x) * 4;
+  const si = idx(startX, startY);
+  const sr = data[si], sg = data[si + 1], sb = data[si + 2], sa = data[si + 3];
+  const [fr, fg, fb, fa] = fill;
+  if (sr === fr && sg === fg && sb === fb && sa === fa) return false;
+  const tol2 = tolerance * tolerance * 4;
+  const matches = i => {
+    const dr = data[i] - sr, dg = data[i + 1] - sg, db = data[i + 2] - sb, da = data[i + 3] - sa;
+    return (dr * dr + dg * dg + db * db + da * da) <= tol2;
+  };
+  const visited = new Uint8Array(w * h);
+  const stack = [[startX, startY]];
+  while (stack.length){
+    const [x, y] = stack.pop();
+    if (x < 0 || x >= w || y < 0 || y >= h) continue;
+    const vi = y * w + x;
+    if (visited[vi] || !matches(vi * 4)) continue;
+    let xl = x;
+    while (xl > 0 && !visited[y * w + xl - 1] && matches(idx(xl - 1, y))) xl--;
+    let xr = x;
+    while (xr < w - 1 && !visited[y * w + xr + 1] && matches(idx(xr + 1, y))) xr++;
+    for (let xx = xl; xx <= xr; xx++){
+      const vi2 = y * w + xx;
+      visited[vi2] = 1;
+      const ii = vi2 * 4;
+      data[ii] = fr; data[ii + 1] = fg; data[ii + 2] = fb; data[ii + 3] = fa;
+      if (y > 0 && !visited[(y - 1) * w + xx] && matches(idx(xx, y - 1))) stack.push([xx, y - 1]);
+      if (y < h - 1 && !visited[(y + 1) * w + xx] && matches(idx(xx, y + 1))) stack.push([xx, y + 1]);
+    }
+  }
+  return true;
+}
+function pushUndo(){
+  const frame = currentFrame();
+  const layer = frame.layers.find(l => l.id === frame.active);
+  undoStack.push({ frameId: frame.id, layerId: layer.id, blob: layer.blob });
+  if (undoStack.length > 20) undoStack.shift();
+  redoStack = [];
+}
+async function doBucketFill(e){
+  const p = toCanvas(e);
+  const x = Math.max(0, Math.min(W - 1, Math.round(p.x)));
+  const y = Math.max(0, Math.min(H - 1, Math.round(p.y)));
+  pushUndo();
+  const imgData = pctx.getImageData(0, 0, W, H);
+  const changed = floodFill(imgData, x, y, hexToRgba(state.color), 32);
+  if (changed) pctx.putImageData(imgData, 0, 0);
+  await commit();
+  refreshUndo();
+}
 
 paper.addEventListener('pointerdown', e => {
   if (state.playing) return;
+  if (pinch) return;
   if (state.pencilOnly && e.pointerType !== 'pen') return;   // パームリジェクション
   if (activeId !== null) return;
   e.preventDefault();
+  if (state.tool === 'bucket'){
+    doBucketFill(e);
+    return;
+  }
   activeId = e.pointerId;
+  activePointerType = e.pointerType;
   paper.setPointerCapture(e.pointerId);
   drawing = true;
-  undoStack.push({ id: state.frames[state.cur].id, blob: state.frames[state.cur].blob });
-  if (undoStack.length > 20) undoStack.shift();
-  redoStack = [];
+  pushUndo();
   setBrush();
   last = toCanvas(e);
-  segment(last, { x: last.x + 0.01, y: last.y }, widthFor(e));   // 点を打つ
+  smWidth = widthFor(e);
+  ptBuf = [last, last, last];
+  segment(last, { x: last.x + 0.01, y: last.y }, smWidth);   // 点を打つ
 });
 
 paper.addEventListener('pointermove', e => {
@@ -391,14 +989,21 @@ paper.addEventListener('pointermove', e => {
   const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
   for (const ev of evs) {
     const p = toCanvas(ev);
-    segment(last, p, widthFor(ev));
+    smWidth = smWidth ? smWidth * 0.7 + widthFor(ev) * 0.3 : widthFor(ev);
+    ptBuf.push(p); if (ptBuf.length > 3) ptBuf.shift();
+    if (ptBuf.length === 3) strokeQuad(ptBuf[0], ptBuf[1], ptBuf[2], smWidth);
     last = p;
   }
 });
 
 function endStroke(e){
   if (!drawing || (e && e.pointerId !== activeId)) return;
-  drawing = false; activeId = null; last = null;
+  if (ptBuf.length === 3){
+    const m2 = midPoint(ptBuf[1], ptBuf[2]);
+    pctx.lineWidth = smWidth;
+    pctx.beginPath(); pctx.moveTo(m2.x, m2.y); pctx.lineTo(ptBuf[2].x, ptBuf[2].y); pctx.stroke();
+  }
+  drawing = false; activeId = null; activePointerType = null; last = null; ptBuf = [];
   pctx.globalCompositeOperation = 'source-over';
   commit();
   refreshUndo();
@@ -407,11 +1012,13 @@ paper.addEventListener('pointerup', endStroke);
 paper.addEventListener('pointercancel', endStroke);
 
 async function commit(){
-  const f = state.frames[state.cur];
+  const frame = currentFrame();
+  const layer = frame.layers.find(l => l.id === frame.active);
   const blob = await new Promise(r => paper.toBlob(r, 'image/png'));
-  f.blob = blob;
-  f.img = await toImg(blob);
-  await idbPut('frames', f.id, blob).catch(()=>{});
+  layer.blob = blob;
+  layer.img = await toImg(blob);
+  await idbPut('frames', lkey(frame.id, layer.id), blob).catch(()=>{});
+  recompositeFrame(frame);
   drawThumb(state.cur);
   saveMeta();
 }
@@ -443,29 +1050,42 @@ function drawOnion(){
 /* ---------------- コマの操作 ---------------- */
 async function showFrame(i){
   state.cur = Math.max(0, Math.min(i, state.frames.length - 1));
-  const f = state.frames[state.cur];
-  pctx.globalCompositeOperation = 'source-over';
-  pctx.clearRect(0, 0, W, H);
-  if (f.img) pctx.drawImage(f.img, 0, 0, W, H);
+  loadActiveLayerIntoPaper();
+  refreshLayerSplit();
   drawOnion();
   renderStrip();
   saveMeta();
 }
 async function addFrame(copy){
-  const src = state.frames[state.cur];
-  const f = { id: uid(), blob: copy ? src.blob : null, img: copy ? src.img : null };
-  state.frames.splice(state.cur + 1, 0, f);
-  if (f.blob) await idbPut('frames', f.id, f.blob).catch(()=>{});
+  const src = currentFrame();
+  const newId = uid();
+  let layers, active;
+  if (copy){
+    layers = src.layers.map(l => ({ id: uid(), blob: l.blob, img: l.img, name: l.name, visible: l.visible }));
+    const srcIdx = src.layers.findIndex(l => l.id === src.active);
+    active = layers[srcIdx >= 0 ? srcIdx : 0].id;
+    for (const l of layers) if (l.blob) await idbPut('frames', lkey(newId, l.id), l.blob).catch(()=>{});
+  } else {
+    const layerId = uid();
+    layers = [{ id: layerId, blob: null, img: null, name: 'レイヤー1', visible: true }];
+    active = layerId;
+  }
+  const frame = { id: newId, layers, active, img: null };
+  recompositeFrame(frame);
+  state.frames.splice(state.cur + 1, 0, frame);
   await showFrame(state.cur + 1);
 }
 async function delFrame(){
-  const f = state.frames[state.cur];
+  const frame = currentFrame();
   if (state.frames.length === 1) {                 // 最後の1枚は中身だけ消す
-    f.blob = null; f.img = null;
-    await idbDel('frames', f.id);
+    for (const l of frame.layers) await idbDel('frames', lkey(frame.id, l.id)).catch(()=>{});
+    const layerId = uid();
+    frame.layers = [{ id: layerId, blob: null, img: null, name: 'レイヤー1', visible: true }];
+    frame.active = layerId;
+    recompositeFrame(frame);
   } else {
+    await idbDeletePrefix('frames', `${state.projectId}:${frame.id}:`);
     state.frames.splice(state.cur, 1);
-    await idbDel('frames', f.id);
     if (state.cur >= state.frames.length) state.cur = state.frames.length - 1;
   }
   undoStack = []; redoStack = []; refreshUndo();
@@ -482,10 +1102,11 @@ async function move(dir){
 function renderStrip(){
   const strip = $('#strip');
   strip.innerHTML = '';
+  const ratio = H / W;
   state.frames.forEach((f, i) => {
     const cell = document.createElement('div');
     cell.className = 'cell' + (i === state.cur ? ' on' : '');
-    const c = document.createElement('canvas'); c.width = 208; c.height = 117;
+    const c = document.createElement('canvas'); c.width = 208; c.height = Math.max(1, Math.round(208 * ratio));
     cell.appendChild(c);
     const no = document.createElement('div');
     no.className = 'no'; no.textContent = String(i + 1).padStart(3, '0');
@@ -500,7 +1121,8 @@ function renderStrip(){
 }
 function paintThumb(c, f){
   const x = c.getContext('2d');
-  x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height);
+  if (state.thumbBg) x.drawImage(state.thumbBg, 0, 0, c.width, c.height);
+  else { x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); }
   if (f.img) x.drawImage(f.img, 0, 0, c.width, c.height);
 }
 function drawThumb(i){
@@ -514,16 +1136,23 @@ function refreshUndo(){
   $('#redo').disabled = redoStack.length === 0;
 }
 async function restore(entry, otherStack){
-  const i = state.frames.findIndex(f => f.id === entry.id);
-  if (i < 0) return;
-  const f = state.frames[i];
-  otherStack.push({ id: f.id, blob: f.blob });
-  f.blob = entry.blob;
-  f.img = await toImg(entry.blob);
-  if (entry.blob) await idbPut('frames', f.id, entry.blob).catch(()=>{});
-  else await idbDel('frames', f.id);
-  if (i === state.cur) await showFrame(i); else drawThumb(i);
-  drawThumb(i); refreshUndo();
+  const frame = state.frames.find(f => f.id === entry.frameId);
+  if (!frame) return;
+  const layer = frame.layers.find(l => l.id === entry.layerId);
+  if (!layer) return;
+  otherStack.push({ frameId: frame.id, layerId: layer.id, blob: layer.blob });
+  layer.blob = entry.blob;
+  layer.img = await toImg(entry.blob);
+  if (entry.blob) await idbPut('frames', lkey(frame.id, layer.id), entry.blob).catch(()=>{});
+  else await idbDel('frames', lkey(frame.id, layer.id));
+  recompositeFrame(frame);
+  const frameIdx = state.frames.indexOf(frame);
+  if (frameIdx === state.cur){
+    if (layer.id === frame.active) loadActiveLayerIntoPaper();
+    refreshLayerSplit();
+    drawOnion();
+  }
+  drawThumb(frameIdx); refreshUndo();
 }
 $('#undo').onclick = () => { const e = undoStack.pop(); if (e) restore(e, redoStack); };
 $('#redo').onclick = () => { const e = redoStack.pop(); if (e) restore(e, undoStack); };
@@ -539,7 +1168,7 @@ function play(){
   const step = () => {
     if (!state.playing) return;
     const f = state.frames[i];
-    plctx.fillStyle = '#fff'; plctx.fillRect(0, 0, W, H);
+    plctx.drawImage(bg, 0, 0, W, H);
     if (f.img) plctx.drawImage(f.img, 0, 0, W, H);
     i = (i + 1) % state.frames.length;
     playTimer = setTimeout(step, 1000 / state.fps);
@@ -563,13 +1192,14 @@ function buildSwatches(){
     const b = document.createElement('button');
     b.className = 'sw' + (c === state.color ? ' on' : '');
     b.style.background = c;
-    b.onclick = () => { state.color = c; state.tool = 'pen'; syncTools(); saveMeta(); };
+    b.onclick = () => { state.color = c; if (state.tool !== 'bucket') state.tool = 'pen'; syncTools(); saveMeta(); };
     box.appendChild(b);
   });
 }
 function syncTools(){
   $('#pen').classList.toggle('on', state.tool === 'pen');
   $('#eraser').classList.toggle('on', state.tool === 'eraser');
+  $('#bucket').classList.toggle('on', state.tool === 'bucket');
   [...$('#swatches').children].forEach((b, i) => b.classList.toggle('on', COLORS[i] === state.color));
   $('#sizeVal').textContent = state.size;
   $('#size').value = state.size;
@@ -578,14 +1208,19 @@ function syncTools(){
   $('#onionBtn').classList.toggle('on', state.onion > 0);
   $('#pencilOnly').textContent = state.pencilOnly ? 'ペンのみ' : '指OK';
   $('#pencilOnly').classList.toggle('on', state.pencilOnly);
+  $('#pressureBtn').textContent = state.pressureEnabled ? '筆圧オン' : '筆圧オフ(一定)';
+  $('#pressureBtn').classList.toggle('on', state.pressureEnabled);
 }
 $('#pen').onclick    = () => { state.tool = 'pen'; syncTools(); saveMeta(); };
 $('#eraser').onclick = () => { state.tool = 'eraser'; syncTools(); saveMeta(); };
+$('#bucket').onclick = () => { state.tool = 'bucket'; syncTools(); saveMeta(); };
+$('#swapTool').onclick = () => { state.tool = state.tool === 'eraser' ? 'pen' : 'eraser'; syncTools(); saveMeta(); };
 $('#size').oninput   = e => { state.size = +e.target.value; $('#sizeVal').textContent = state.size; saveMeta(); };
-$('#custom').oninput = e => { state.color = e.target.value; state.tool = 'pen'; syncTools(); saveMeta(); };
+$('#custom').oninput = e => { state.color = e.target.value; if (state.tool !== 'bucket') state.tool = 'pen'; syncTools(); saveMeta(); };
 $('#fps').oninput    = e => { state.fps = +e.target.value; $('#fpsVal').textContent = state.fps; saveMeta(); };
 $('#onionBtn').onclick   = () => { state.onion = (state.onion + 1) % 3; syncTools(); drawOnion(); saveMeta(); };
 $('#pencilOnly').onclick = () => { state.pencilOnly = !state.pencilOnly; syncTools(); saveMeta(); };
+$('#pressureBtn').onclick = () => { state.pressureEnabled = !state.pressureEnabled; syncTools(); saveMeta(); };
 $('#add').onclick   = () => !state.playing && addFrame(false);
 $('#dup').onclick   = () => !state.playing && addFrame(true);
 $('#del').onclick   = () => !state.playing && delFrame();
@@ -594,12 +1229,240 @@ $('#right').onclick = () => !state.playing && move(1);
 
 $('#menuBtn').onclick   = () => $('#menuPop').hidden = false;
 $('#menuClose').onclick = () => $('#menuPop').hidden = true;
-$('#clearAll').onclick  = async () => {
-  if (!confirm('すべてのコマを削除して新規作成します。よろしいですか？')) return;
-  await idbClear('frames'); await idbClear('meta');
-  location.reload();
+$('#renameProj').onclick = () => { $('#menuPop').hidden = true; $('#projTitle').onclick(); };
+$('#deleteProjBtn').onclick = async () => {
+  if (!confirm(`「${state.proj.name}」を削除します。元に戻せません。よろしいですか？`)) return;
+  $('#menuPop').hidden = true;
+  await deleteProject(state.projectId);
+  showScreen('home'); await renderHome();
 };
-$('#exportBtn').onclick = () => { stop(); $('#expPop').hidden = false; };
+$('#bgMenuBtn').onclick = () => { $('#menuPop').hidden = true; openBgModal(); };
+
+/* ---------------- 背景モーダル ---------------- */
+const BG_COLORS = ['#ffffff', '#f7f3ea', '#faf0e6', '#e9f1ff', '#fff4e0', '#eafaf1', '#2b2b2b', '#1a1a1a'];
+const PATTERN_LIST = [
+  { k: 'grid', label: '方眼' },
+  { k: 'dot', label: 'ドット' },
+  { k: 'graph', label: 'グラフ用紙' },
+  { k: 'lines', label: 'ノート罫線' }
+];
+let bgDraft = null, bgTempPhotoBlob = null;
+function buildBgSwatches(){
+  const box = $('#bgSwatches'); box.innerHTML = '';
+  BG_COLORS.forEach(c => {
+    const b = document.createElement('button'); b.className = 'sw'; b.style.background = c;
+    b.onclick = () => { bgDraft = { type: 'color', color: c }; bgTempPhotoBlob = null; syncBgUI(); };
+    box.appendChild(b);
+  });
+}
+function buildBgPatterns(){
+  const box = $('#bgPatterns'); box.innerHTML = '';
+  PATTERN_LIST.forEach(pt => {
+    const b = document.createElement('button'); b.className = 'btn'; b.textContent = pt.label; b.style.flex = '1 1 40%';
+    b.onclick = () => { bgDraft = { type: 'pattern', pattern: pt.k }; bgTempPhotoBlob = null; syncBgUI(); };
+    box.appendChild(b);
+  });
+}
+buildBgSwatches(); buildBgPatterns();
+function syncBgUI(){
+  document.querySelectorAll('.bgtab').forEach(b => b.classList.toggle('on', b.dataset.t === bgDraft.type));
+  $('#bgColorPane').style.display   = bgDraft.type === 'color'   ? 'block' : 'none';
+  $('#bgPatternPane').style.display = bgDraft.type === 'pattern' ? 'block' : 'none';
+  $('#bgPhotoPane').style.display   = bgDraft.type === 'photo'   ? 'block' : 'none';
+  [...$('#bgSwatches').children].forEach((b, i) => b.classList.toggle('on', bgDraft.type === 'color' && BG_COLORS[i] === bgDraft.color));
+  [...$('#bgPatterns').children].forEach((b, i) => b.classList.toggle('on', bgDraft.type === 'pattern' && PATTERN_LIST[i].k === bgDraft.pattern));
+  if (bgDraft.type === 'photo'){
+    const pv = $('#bgPhotoPreview'); pv.width = 300; pv.height = Math.round(300 * H / W);
+    const pc = pv.getContext('2d');
+    if (bgTempPhotoBlob){
+      toImg(bgTempPhotoBlob).then(img => { if (img) pc.drawImage(img, 0, 0, pv.width, pv.height); });
+    } else if (state.proj.bg && state.proj.bg.type === 'photo'){
+      drawBackgroundFor(pc, pv.width, pv.height, state.proj);
+    } else {
+      pc.fillStyle = '#111'; pc.fillRect(0, 0, pv.width, pv.height);
+    }
+  }
+}
+document.querySelectorAll('.bgtab').forEach(b => b.onclick = () => {
+  const t = b.dataset.t;
+  if (t === 'color')   bgDraft = { type: 'color', color: (state.proj.bg && state.proj.bg.color) || '#ffffff' };
+  if (t === 'pattern') bgDraft = { type: 'pattern', pattern: (state.proj.bg && state.proj.bg.pattern) || 'grid' };
+  if (t === 'photo')   bgDraft = { type: 'photo' };
+  syncBgUI();
+});
+$('#bgCustomColor').oninput = e => { bgDraft = { type: 'color', color: e.target.value }; bgTempPhotoBlob = null; syncBgUI(); };
+$('#bgPhotoPick').onclick = () => $('#bgFileInput').click();
+$('#bgFileInput').onchange = async e => {
+  const file = e.target.files[0]; if (!file) return;
+  const img = await toImg(file);
+  if (!img) return;
+  const c = document.createElement('canvas'); c.width = W; c.height = H;
+  const cx = c.getContext('2d');
+  const s = Math.max(W / img.width, H / img.height);
+  const iw = img.width * s, ih = img.height * s;
+  cx.drawImage(img, (W - iw) / 2, (H - ih) / 2, iw, ih);
+  bgTempPhotoBlob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.9));
+  bgDraft = { type: 'photo' };
+  syncBgUI();
+  e.target.value = '';
+};
+$('#bgPhotoClear').onclick = () => { bgTempPhotoBlob = 'CLEAR'; bgDraft = { type: 'photo' }; syncBgUI(); };
+function openBgModal(){
+  bgDraft = state.proj.bg ? JSON.parse(JSON.stringify(state.proj.bg)) : { type: 'color', color: '#ffffff' };
+  bgTempPhotoBlob = null;
+  syncBgUI();
+  $('#bgPop').hidden = false;
+}
+$('#bgCancel').onclick = () => { $('#bgPop').hidden = true; };
+$('#bgApply').onclick = async () => {
+  state.proj.bg = bgDraft;
+  if (bgDraft.type === 'photo'){
+    if (bgTempPhotoBlob === 'CLEAR'){
+      await idbDel('bgphotos', state.projectId).catch(()=>{});
+      state.proj.bg = { type: 'color', color: '#ffffff' };
+    } else if (bgTempPhotoBlob){
+      await idbPut('bgphotos', state.projectId, bgTempPhotoBlob).catch(()=>{});
+    }
+  } else {
+    await idbDel('bgphotos', state.projectId).catch(()=>{});
+  }
+  state.proj.updatedAt = Date.now();
+  await idbPut('projects', state.projectId, state.proj).catch(()=>{});
+  await drawBackgroundFor(bgctx, W, H, state.proj);
+  await rebuildThumbBg();
+  drawOnion();
+  renderStrip();
+  $('#bgPop').hidden = true;
+};
+
+function pickMp4MimeType(){
+  if (!window.MediaRecorder || !MediaRecorder.isTypeSupported) return null;
+  const candidates = ['video/mp4;codecs=avc1,mp4a.40.2', 'video/mp4;codecs=avc1', 'video/mp4'];
+  for (const c of candidates) if (MediaRecorder.isTypeSupported(c)) return c;
+  return null;
+}
+/* ---------------- レイヤーパネル ---------------- */
+function renderLayerPanel(){
+  const list = $('#layerList'); list.innerHTML = '';
+  const frame = currentFrame();
+  for (let i = frame.layers.length - 1; i >= 0; i--){
+    const layer = frame.layers[i];
+    const row = document.createElement('div');
+    row.className = 'layerRow' + (layer.id === frame.active ? ' on' : '');
+    const eye = document.createElement('button'); eye.className = 'layerEye';
+    eye.textContent = layer.visible === false ? '🚫' : '👁';
+    eye.onclick = ev => {
+      ev.stopPropagation();
+      layer.visible = layer.visible === false ? true : false;
+      refreshLayerSplit(); recompositeAndSave(); renderLayerPanel();
+    };
+    const thumb = document.createElement('canvas');
+    thumb.width = 52; thumb.height = Math.max(1, Math.round(52 * H / W)); thumb.className = 'layerThumb';
+    const name = document.createElement('span'); name.className = 'layerName'; name.textContent = layer.name;
+    name.onclick = ev => {
+      ev.stopPropagation();
+      const nm = prompt('レイヤー名', layer.name);
+      if (nm && nm.trim()){ layer.name = nm.trim(); renderLayerPanel(); saveMeta(); }
+    };
+    const up = document.createElement('button'); up.className = 'tbtn'; up.textContent = '↑';
+    up.onclick = ev => { ev.stopPropagation(); reorderLayer(layer.id, 1); };
+    const down = document.createElement('button'); down.className = 'tbtn'; down.textContent = '↓';
+    down.onclick = ev => { ev.stopPropagation(); reorderLayer(layer.id, -1); };
+    row.onclick = () => {
+      frame.active = layer.id;
+      refreshLayerSplit(); loadActiveLayerIntoPaper(); renderLayerPanel(); saveMeta();
+    };
+    row.append(eye, thumb, name, up, down);
+    list.appendChild(row);
+    const tx = thumb.getContext('2d');
+    tx.fillStyle = '#fff'; tx.fillRect(0, 0, thumb.width, thumb.height);
+    if (layer.img) tx.drawImage(layer.img, 0, 0, thumb.width, thumb.height);
+  }
+  $('#layerPaste').disabled = !state.layerClipboard;
+}
+function reorderLayer(layerId, dir){
+  const frame = currentFrame();
+  const i = frame.layers.findIndex(l => l.id === layerId);
+  const j = i + dir;
+  if (j < 0 || j >= frame.layers.length) return;
+  [frame.layers[i], frame.layers[j]] = [frame.layers[j], frame.layers[i]];
+  refreshLayerSplit(); recompositeAndSave(); renderLayerPanel();
+}
+async function addLayerBlank(){
+  const frame = currentFrame();
+  const idx = frame.layers.findIndex(l => l.id === frame.active);
+  const layer = { id: uid(), blob: null, img: null, name: `レイヤー${frame.layers.length + 1}`, visible: true };
+  frame.layers.splice(idx + 1, 0, layer);
+  frame.active = layer.id;
+  refreshLayerSplit(); loadActiveLayerIntoPaper(); recompositeAndSave(); renderLayerPanel();
+}
+async function duplicateActiveLayer(){
+  const frame = currentFrame();
+  const idx = frame.layers.findIndex(l => l.id === frame.active);
+  if (idx < 0) return;
+  const src = frame.layers[idx];
+  const layer = { id: uid(), blob: src.blob, img: src.img, name: src.name + 'のコピー', visible: true };
+  frame.layers.splice(idx + 1, 0, layer);
+  if (layer.blob) await idbPut('frames', lkey(frame.id, layer.id), layer.blob).catch(()=>{});
+  frame.active = layer.id;
+  refreshLayerSplit(); loadActiveLayerIntoPaper(); recompositeAndSave(); renderLayerPanel();
+}
+async function deleteActiveLayer(){
+  const frame = currentFrame();
+  if (frame.layers.length <= 1){ alert('最後の1枚のレイヤーは削除できません。'); return; }
+  const idx = frame.layers.findIndex(l => l.id === frame.active);
+  if (idx < 0) return;
+  const [removed] = frame.layers.splice(idx, 1);
+  await idbDel('frames', lkey(frame.id, removed.id)).catch(()=>{});
+  const newIdx = Math.min(idx, frame.layers.length - 1);
+  frame.active = frame.layers[newIdx].id;
+  refreshLayerSplit(); loadActiveLayerIntoPaper(); recompositeAndSave(); renderLayerPanel();
+}
+function copyActiveLayer(){
+  const frame = currentFrame();
+  const layer = frame.layers.find(l => l.id === frame.active);
+  if (!layer) return;
+  state.layerClipboard = { blob: layer.blob, name: layer.name };
+  $('#layerPaste').disabled = false;
+  alert(`「${layer.name}」をコピーしました。貼り付けたいコマに移動してから「このコマに貼り付け」を押してください。`);
+}
+async function pasteLayerHere(){
+  if (!state.layerClipboard) return;
+  const frame = currentFrame();
+  const layer = {
+    id: uid(), blob: state.layerClipboard.blob,
+    img: await toImg(state.layerClipboard.blob),
+    name: state.layerClipboard.name + '(コピー)', visible: true
+  };
+  frame.layers.push(layer);
+  if (layer.blob) await idbPut('frames', lkey(frame.id, layer.id), layer.blob).catch(()=>{});
+  frame.active = layer.id;
+  refreshLayerSplit(); loadActiveLayerIntoPaper(); recompositeAndSave(); renderLayerPanel();
+}
+$('#layerBtn').onclick = () => { renderLayerPanel(); $('#layerPop').hidden = false; };
+$('#layerClose').onclick = () => { $('#layerPop').hidden = true; };
+$('#layerAdd').onclick  = () => addLayerBlank();
+$('#layerDup').onclick  = () => duplicateActiveLayer();
+$('#layerDel').onclick  = () => deleteActiveLayer();
+$('#layerCopy').onclick = () => copyActiveLayer();
+$('#layerPaste').onclick = () => pasteLayerHere();
+
+$('#exportBtn').onclick = () => {
+  stop();
+  const sel = $('#expScale'); sel.innerHTML = '';
+  [[0.25, '25%'], [0.5, '50%'], [1, '100%']].forEach(([v, label]) => {
+    const o = document.createElement('option');
+    o.value = v; o.textContent = `${label}（${Math.round(W * v)}×${Math.round(H * v)}）`;
+    if (v === 0.5) o.selected = true;
+    sel.appendChild(o);
+  });
+  const testCanvas = document.createElement('canvas');
+  const mp4ok = !!testCanvas.captureStream && !!pickMp4MimeType();
+  $('#expMp4').disabled = !mp4ok;
+  $('#expMp4').textContent = mp4ok ? 'MP4で書き出す（インスタ等向け）' : 'MP4非対応（このSafariでは使えません）';
+  $('#mp4Note').style.display = mp4ok ? 'block' : 'none';
+  $('#expPop').hidden = false;
+};
 $('#expClose').onclick  = () => $('#expPop').hidden = true;
 
 /* ---------------- 書き出し ---------------- */
@@ -612,11 +1475,12 @@ function progress(title, pct, text){
 }
 const doneProg = () => { $('#progPop').hidden = true; };
 
-function frameCanvas(f, scale){
+function frameCanvas(f, scale, bgSrc){
   const c = document.createElement('canvas');
   c.width = Math.max(2, Math.round(W * scale)); c.height = Math.max(2, Math.round(H * scale));
   const x = c.getContext('2d');
-  x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height);
+  if (bgSrc) x.drawImage(bgSrc, 0, 0, c.width, c.height);
+  else { x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); }
   if (f.img) x.drawImage(f.img, 0, 0, c.width, c.height);
   return c;
 }
@@ -670,10 +1534,13 @@ function makeZip(files){
 async function exportPng(){
   const scale = +$('#expScale').value;
   $('#expPop').hidden = true;
+  const bgW = Math.max(2, Math.round(W * scale)), bgH = Math.max(2, Math.round(H * scale));
+  const bgSrc = document.createElement('canvas'); bgSrc.width = bgW; bgSrc.height = bgH;
+  await drawBackgroundFor(bgSrc.getContext('2d'), bgW, bgH, state.proj);
   const files = [];
   for (let i = 0; i < state.frames.length; i++) {
     await progress('PNG連番を書き出し中', i / state.frames.length, `${i + 1} / ${state.frames.length} コマ`);
-    const c = frameCanvas(state.frames[i], scale);
+    const c = frameCanvas(state.frames[i], scale, bgSrc);
     const blob = await new Promise(r => c.toBlob(r, 'image/png'));
     files.push({ name: String(i + 1).padStart(4, '0') + '.png', data: new Uint8Array(await blob.arrayBuffer()) });
   }
@@ -681,6 +1548,54 @@ async function exportPng(){
   const zip = makeZip(files);
   doneProg();
   await saveOut(zip, `komadori_${stamp()}.zip`, 'application/zip');
+}
+async function exportMp4(){
+  const scale = +$('#expScale').value;
+  $('#expPop').hidden = true;
+  const mime = pickMp4MimeType();
+  if (!mime){
+    alert('この端末のSafariはMP4書き出しに対応していません。GIFをお試しください。');
+    return;
+  }
+  const w = Math.max(2, Math.round(W * scale)), h = Math.max(2, Math.round(H * scale));
+  const rec = document.createElement('canvas'); rec.width = w; rec.height = h;
+  const rctx = rec.getContext('2d');
+  const bgSrc = document.createElement('canvas'); bgSrc.width = w; bgSrc.height = h;
+  await drawBackgroundFor(bgSrc.getContext('2d'), w, h, state.proj);
+
+  await progress('MP4を書き出し中', 0.02, '準備しています…');
+  const draw = i => {
+    rctx.drawImage(bgSrc, 0, 0);
+    const f = state.frames[i];
+    if (f && f.img) rctx.drawImage(f.img, 0, 0, w, h);
+  };
+  draw(0);
+
+  const stream = rec.captureStream(state.fps);
+  const chunks = [];
+  const recorder = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 8_000_000 });
+  recorder.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+  const stopped = new Promise((resolve, reject) => {
+    recorder.onstop = () => resolve();
+    recorder.onerror = ev => reject(ev.error || new Error('recording error'));
+  });
+
+  recorder.start();
+  await new Promise(r => setTimeout(r, 200));   // 録画開始直後の安定待ち
+
+  const n = state.frames.length;
+  const frameMs = 1000 / state.fps;
+  for (let i = 0; i < n; i++){
+    await progress('MP4を書き出し中', 0.05 + 0.9 * i / n, `${i + 1} / ${n} コマ（実際の再生と同じ時間がかかります）`);
+    draw(i);
+    await new Promise(r => setTimeout(r, frameMs));
+  }
+  await new Promise(r => setTimeout(r, 250));   // 最後のコマの余韻
+  recorder.stop();
+  await stopped;
+  doneProg();
+  const blob = new Blob(chunks, { type: mime.split(';')[0] });
+  await saveOut(blob, `komadori_${stamp()}.mp4`, 'video/mp4');
 }
 const stamp = () => {
   const d = new Date(), p = n => String(n).padStart(2, '0');
@@ -728,18 +1643,18 @@ async function exportGif(){
   $('#expPop').hidden = true;
   const n = state.frames.length;
 
-  // 1コマ分だけを使い回す作業用キャンバス（メモリを節約するため）
   const work = document.createElement('canvas');
   work.width  = Math.max(2, Math.round(W * scale));
   work.height = Math.max(2, Math.round(H * scale));
   const w = work.width, h = work.height, wctx = work.getContext('2d', { willReadFrequently: true });
+  const bgSrc = document.createElement('canvas'); bgSrc.width = w; bgSrc.height = h;
+  await drawBackgroundFor(bgSrc.getContext('2d'), w, h, state.proj);
   const pixels = f => {
-    wctx.fillStyle = '#fff'; wctx.fillRect(0, 0, w, h);
+    wctx.drawImage(bgSrc, 0, 0);
     if (f.img) wctx.drawImage(f.img, 0, 0, w, h);
     return wctx.getImageData(0, 0, w, h).data;
   };
 
-  // 1回目: 使われている色を数えて、多い順に256色をパレットにする
   const hist = new Map();
   for (let i = 0; i < n; i++) {
     await progress('GIFを書き出し中', 0.05 + 0.25 * i / n, `色を数えています ${i + 1} / ${n}`);
@@ -794,35 +1709,23 @@ async function exportGif(){
 }
 $('#expPng').onclick = () => exportPng().catch(err => { doneProg(); alert('書き出しに失敗しました: ' + err); });
 $('#expGif').onclick = () => exportGif().catch(err => { doneProg(); alert('書き出しに失敗しました: ' + err); });
+$('#expMp4').onclick = () => exportMp4().catch(err => { doneProg(); alert('書き出しに失敗しました: ' + err); });
 
 /* ---------------- Safariのジェスチャ抑制 ---------------- */
 ['gesturestart', 'gesturechange', 'gestureend'].forEach(t =>
   document.addEventListener(t, e => e.preventDefault(), { passive: false }));
 document.addEventListener('touchmove', e => {
   if (e.target.closest('#strip')) return;         // タイムシートの横スクロールは残す
+  if (e.target.closest('#projList')) return;       // ホーム画面のスクロールは残す
   if (e.touches.length > 1) e.preventDefault();
 }, { passive: false });
 
 /* ---------------- 起動 ---------------- */
 async function boot(){
   db = await openDB();
-  const meta = await idbGet('meta', 'project').catch(() => null);
-  if (meta && meta.order && meta.order.length) {
-    state.fps = meta.fps ?? 12;
-    state.onion = meta.onion ?? 1;
-    state.size = meta.size ?? 6;
-    state.color = meta.color ?? '#1a1a1a';
-    state.pencilOnly = !!meta.pencilOnly;
-    for (const id of meta.order) {
-      const blob = await idbGet('frames', id).catch(() => null);
-      state.frames.push({ id, blob: blob || null, img: await toImg(blob) });
-    }
-    state.cur = Math.min(meta.cur ?? 0, state.frames.length - 1);
-  } else {
-    state.frames.push({ id: uid(), blob: null, img: null });
-  }
-  buildSwatches(); syncTools(); refreshUndo(); fit();
-  await showFrame(state.cur);
+  await migrateLegacyIfNeeded();
+  showScreen('home');
+  await renderHome();
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
 }
 boot();
