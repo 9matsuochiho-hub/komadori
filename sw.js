@@ -1,15 +1,15 @@
 /* コマドリ Service Worker
    アプリ本体をキャッシュして、電波がなくても開けるようにします。
    ファイルを更新したら、下の CACHE の数字を1つ増やしてください。 */
-const CACHE = 'komadori-v1';
+const CACHE = 'komadori-v2';
 const ASSETS = [
   './',
   './index.html',
   './manifest.webmanifest',
-  './icons/icon-180.png',
-  './icons/icon-192.png',
-  './icons/icon-512.png',
-  './icons/icon-512-maskable.png'
+  './icon-180.png',
+  './icon-192.png',
+  './icon-512.png',
+  './icon-512-maskable.png'
 ];
 
 self.addEventListener('install', e => {
