@@ -1,7 +1,7 @@
 /* コマドリ Service Worker
    アプリ本体をキャッシュして、電波がなくても開けるようにします。
    ファイルを更新したら、下の CACHE の数字を1つ増やしてください。 */
-const CACHE = 'komadori-v7';
+const CACHE = 'komadori-v9';
 const ASSETS = [
   './',
   './index.html',

@@ -108,7 +108,7 @@
   }
   .tbtn.on{background:var(--accent); border-color:var(--accent); color:#0e1418}
   .tbtn svg{width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round}
-  #size{width:46px; height:100px; -webkit-appearance:slider-vertical; writing-mode:vertical-lr; direction:rtl; accent-color:var(--accent)}
+  #size, #opacity{width:46px; height:80px; -webkit-appearance:slider-vertical; writing-mode:vertical-lr; direction:rtl; accent-color:var(--accent)}
   #sizeVal{font-family:var(--mono); font-size:11px; color:var(--muted)}
   #swatches{display:grid; grid-template-columns:repeat(2,1fr); gap:5px; padding:0 8px; width:100%}
   .sw{aspect-ratio:1; border-radius:50%; border:2px solid transparent; box-shadow:0 0 0 1px #0006 inset}
@@ -268,6 +268,9 @@
       <span class="lbl">太さ</span>
       <input type="range" id="size" min="1" max="60" step="1" value="6" orient="vertical">
       <span id="sizeVal">6</span>
+      <span class="lbl">濃さ</span>
+      <input type="range" id="opacity" min="5" max="100" step="5" value="100" orient="vertical">
+      <span id="opacityVal">100%</span>
       <span class="lbl">色</span>
       <div id="swatches"></div>
       <input type="color" id="custom" value="#1a1a1a">
@@ -439,6 +442,7 @@ const state = {
   onion: 1,                // 0/1/2
   pencilOnly: false,
   pressureEnabled: true,
+  opacity: 1,
   playing: false,
   zoom: 1,
   panX: 0,
@@ -688,7 +692,7 @@ async function openProject(pid){
   state.proj = proj;
   if (!state.proj.bg) state.proj.bg = { type: 'color', color: '#ffffff' };
   W = proj.w; H = proj.h;
-  [bg, paper, onion, below, above, player, tint].forEach(c => { c.width = W; c.height = H; });
+  [bg, paper, onion, below, above, player, tint, baseCanvas, strokeCanvas].forEach(c => { c.width = W; c.height = H; });
   await drawBackgroundFor(bgctx, W, H, state.proj);
   await rebuildThumbBg();
 
@@ -702,6 +706,7 @@ async function openProject(pid){
     state.size = meta.size ?? 6; state.color = meta.color ?? '#1a1a1a';
     state.pencilOnly = !!meta.pencilOnly; state.zoom = meta.zoom || 1;
     state.pressureEnabled = meta.pressureEnabled ?? true;
+    state.opacity = meta.opacity ?? 1;
     for (const fdesc of meta.order){
       if (typeof fdesc === 'string'){
         // 旧形式(レイヤー未対応時代)のコマを1レイヤーとして移行
@@ -725,6 +730,7 @@ async function openProject(pid){
   } else {
     state.fps = 12; state.onion = 1; state.size = 6; state.color = '#1a1a1a'; state.pencilOnly = false;
     state.pressureEnabled = true;
+    state.opacity = 1;
     const layerId = uid();
     state.frames = [{ id: uid(), layers: [{ id: layerId, blob: null, img: null, name: 'レイヤー1', visible: true }], active: layerId, img: null }];
   }
@@ -756,7 +762,7 @@ function saveMeta(){
         layers: f.layers.map(l => ({ id: l.id, name: l.name, visible: l.visible !== false }))
       })),
       cur: state.cur, fps: state.fps, onion: state.onion,
-      size: state.size, color: state.color, pencilOnly: state.pencilOnly, zoom: state.zoom, pressureEnabled: state.pressureEnabled
+      size: state.size, color: state.color, pencilOnly: state.pencilOnly, zoom: state.zoom, pressureEnabled: state.pressureEnabled, opacity: state.opacity
     }).catch(()=>{});
     if (state.proj){
       state.proj.updatedAt = Date.now();
@@ -867,6 +873,8 @@ $('#stage').addEventListener('touchcancel', endPinch);
 /* ---------------- 描画 ---------------- */
 let drawing = false, last = null, activeId = null, activePointerType = null;
 let ptBuf = [], smWidth = 0;
+const baseCanvas = document.createElement('canvas'), baseCtx = baseCanvas.getContext('2d');
+const strokeCanvas = document.createElement('canvas'), sctx = strokeCanvas.getContext('2d');
 
 function toCanvas(e){
   const r = paper.getBoundingClientRect();
@@ -879,34 +887,46 @@ function widthFor(e){
   }
   return state.size;
 }
-function setBrush(){
-  pctx.lineCap = 'round'; pctx.lineJoin = 'round';
+function setBrush(ctx){
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
   if (state.tool === 'eraser') {
-    pctx.globalCompositeOperation = 'destination-out';
-    pctx.strokeStyle = 'rgba(0,0,0,1)';
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.strokeStyle = 'rgba(0,0,0,1)';
   } else {
-    pctx.globalCompositeOperation = 'source-over';
-    pctx.strokeStyle = state.color;
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.strokeStyle = state.color;
   }
 }
-function segment(a, b, w){
-  pctx.lineWidth = w;
-  pctx.beginPath(); pctx.moveTo(a.x, a.y); pctx.lineTo(b.x, b.y); pctx.stroke();
+function segment(ctx, a, b, w){
+  ctx.lineWidth = w;
+  ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
 }
 const midPoint = (a, b) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
-function strokeQuad(p0, p1, p2, w){
+function strokeQuad(ctx, p0, p1, p2, w){
   const m1 = midPoint(p0, p1), m2 = midPoint(p1, p2);
-  pctx.lineWidth = w;
-  pctx.beginPath();
-  pctx.moveTo(m1.x, m1.y);
-  pctx.quadraticCurveTo(p1.x, p1.y, m2.x, m2.y);
-  pctx.stroke();
+  ctx.lineWidth = w;
+  ctx.beginPath();
+  ctx.moveTo(m1.x, m1.y);
+  ctx.quadraticCurveTo(p1.x, p1.y, m2.x, m2.y);
+  ctx.stroke();
+}
+// ペンは「今回のストロークだけ」を別バッファにフル濃度で描き、
+// 毎フレーム base(直前までの絵)の上に指定の濃さで1回だけ重ねる。
+// (毎セグメントをそのまま重ねると、線が交差する場所だけ濃くなってしまうため)
+function compositeLivePreview(){
+  pctx.clearRect(0, 0, W, H);
+  pctx.globalCompositeOperation = 'source-over';
+  pctx.globalAlpha = 1;
+  pctx.drawImage(baseCanvas, 0, 0);
+  pctx.globalAlpha = state.opacity;
+  pctx.drawImage(strokeCanvas, 0, 0);
+  pctx.globalAlpha = 1;
 }
 
 /* ---- バケツ塗り ---- */
-function hexToRgba(hex){
+function hexToRgba(hex, alpha){
   const v = hex.replace('#', '');
-  return [parseInt(v.substring(0, 2), 16), parseInt(v.substring(2, 4), 16), parseInt(v.substring(4, 6), 16), 255];
+  return [parseInt(v.substring(0, 2), 16), parseInt(v.substring(2, 4), 16), parseInt(v.substring(4, 6), 16), Math.round((alpha ?? 1) * 255)];
 }
 function floodFill(imgData, startX, startY, fill, tolerance){
   const w = imgData.width, h = imgData.height, data = imgData.data;
@@ -955,7 +975,7 @@ async function doBucketFill(e){
   const y = Math.max(0, Math.min(H - 1, Math.round(p.y)));
   pushUndo();
   const imgData = pctx.getImageData(0, 0, W, H);
-  const changed = floodFill(imgData, x, y, hexToRgba(state.color), 32);
+  const changed = floodFill(imgData, x, y, hexToRgba(state.color, state.opacity), 32);
   if (changed) pctx.putImageData(imgData, 0, 0);
   await commit();
   refreshUndo();
@@ -976,33 +996,44 @@ paper.addEventListener('pointerdown', e => {
   paper.setPointerCapture(e.pointerId);
   drawing = true;
   pushUndo();
-  setBrush();
   last = toCanvas(e);
   smWidth = widthFor(e);
   ptBuf = [last, last, last];
-  segment(last, { x: last.x + 0.01, y: last.y }, smWidth);   // 点を打つ
+  if (state.tool === 'eraser'){
+    setBrush(pctx);
+    segment(pctx, last, { x: last.x + 0.01, y: last.y }, smWidth);
+  } else {
+    baseCtx.clearRect(0, 0, W, H); baseCtx.drawImage(paper, 0, 0);
+    sctx.clearRect(0, 0, W, H); setBrush(sctx);
+    segment(sctx, last, { x: last.x + 0.01, y: last.y }, smWidth);
+    compositeLivePreview();
+  }
 });
 
 paper.addEventListener('pointermove', e => {
   if (!drawing || e.pointerId !== activeId) return;
   e.preventDefault();
   const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
+  const target = state.tool === 'eraser' ? pctx : sctx;
   for (const ev of evs) {
     const p = toCanvas(ev);
     smWidth = smWidth ? smWidth * 0.7 + widthFor(ev) * 0.3 : widthFor(ev);
     ptBuf.push(p); if (ptBuf.length > 3) ptBuf.shift();
-    if (ptBuf.length === 3) strokeQuad(ptBuf[0], ptBuf[1], ptBuf[2], smWidth);
+    if (ptBuf.length === 3) strokeQuad(target, ptBuf[0], ptBuf[1], ptBuf[2], smWidth);
     last = p;
   }
+  if (state.tool !== 'eraser') compositeLivePreview();
 });
 
 function endStroke(e){
   if (!drawing || (e && e.pointerId !== activeId)) return;
+  const target = state.tool === 'eraser' ? pctx : sctx;
   if (ptBuf.length === 3){
     const m2 = midPoint(ptBuf[1], ptBuf[2]);
-    pctx.lineWidth = smWidth;
-    pctx.beginPath(); pctx.moveTo(m2.x, m2.y); pctx.lineTo(ptBuf[2].x, ptBuf[2].y); pctx.stroke();
+    target.lineWidth = smWidth;
+    target.beginPath(); target.moveTo(m2.x, m2.y); target.lineTo(ptBuf[2].x, ptBuf[2].y); target.stroke();
   }
+  if (state.tool !== 'eraser') compositeLivePreview();
   drawing = false; activeId = null; activePointerType = null; last = null; ptBuf = [];
   pctx.globalCompositeOperation = 'source-over';
   commit();
@@ -1203,6 +1234,8 @@ function syncTools(){
   [...$('#swatches').children].forEach((b, i) => b.classList.toggle('on', COLORS[i] === state.color));
   $('#sizeVal').textContent = state.size;
   $('#size').value = state.size;
+  $('#opacityVal').textContent = Math.round(state.opacity * 100) + '%';
+  $('#opacity').value = Math.round(state.opacity * 100);
   $('#fps').value = state.fps; $('#fpsVal').textContent = state.fps;
   $('#onionBtn').textContent = state.onion ? `オニオン: ${state.onion}枚` : 'オニオン: なし';
   $('#onionBtn').classList.toggle('on', state.onion > 0);
@@ -1216,6 +1249,7 @@ $('#eraser').onclick = () => { state.tool = 'eraser'; syncTools(); saveMeta(); }
 $('#bucket').onclick = () => { state.tool = 'bucket'; syncTools(); saveMeta(); };
 $('#swapTool').onclick = () => { state.tool = state.tool === 'eraser' ? 'pen' : 'eraser'; syncTools(); saveMeta(); };
 $('#size').oninput   = e => { state.size = +e.target.value; $('#sizeVal').textContent = state.size; saveMeta(); };
+$('#opacity').oninput = e => { state.opacity = +e.target.value / 100; $('#opacityVal').textContent = e.target.value + '%'; saveMeta(); };
 $('#custom').oninput = e => { state.color = e.target.value; if (state.tool !== 'bucket') state.tool = 'pen'; syncTools(); saveMeta(); };
 $('#fps').oninput    = e => { state.fps = +e.target.value; $('#fpsVal').textContent = state.fps; saveMeta(); };
 $('#onionBtn').onclick   = () => { state.onion = (state.onion + 1) % 3; syncTools(); drawOnion(); saveMeta(); };
@@ -1453,7 +1487,7 @@ $('#exportBtn').onclick = () => {
   [[0.25, '25%'], [0.5, '50%'], [1, '100%']].forEach(([v, label]) => {
     const o = document.createElement('option');
     o.value = v; o.textContent = `${label}（${Math.round(W * v)}×${Math.round(H * v)}）`;
-    if (v === 0.5) o.selected = true;
+    if (v === 1) o.selected = true;
     sel.appendChild(o);
   });
   const testCanvas = document.createElement('canvas');
