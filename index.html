@@ -213,8 +213,8 @@
     <div class="row"><input id="projName" class="textInput" placeholder="プロジェクト名（未入力なら自動）"></div>
     <p class="lbl">キャンバスサイズ</p>
     <div class="row">
-      <button class="btn preset on" data-k="16:9">16:9 横<br>1280×720</button>
-      <button class="btn preset" data-k="9:16">9:16 縦<br>720×1280</button>
+      <button class="btn preset" data-k="16:9">16:9 横<br>1280×720</button>
+      <button class="btn preset on" data-k="9:16">9:16 縦<br>1080×1920</button>
       <button class="btn preset" data-k="1:1">正方形<br>1080×1080</button>
       <button class="btn preset" data-k="4:3">4:3 横<br>1200×900</button>
       <button class="btn preset" data-k="custom">カスタム</button>
@@ -653,8 +653,8 @@ async function rebuildThumbBg(){
 }
 
 /* ---------------- 新規プロジェクト ---------------- */
-const PRESETS = { '16:9': [1280, 720], '9:16': [720, 1280], '1:1': [1080, 1080], '4:3': [1200, 900] };
-let sizePreset = '16:9';
+const PRESETS = { '16:9': [1280, 720], '9:16': [1080, 1920], '1:1': [1080, 1080], '4:3': [1200, 900] };
+let sizePreset = '9:16';
 function selectPreset(key){
   sizePreset = key;
   document.querySelectorAll('.preset').forEach(b => b.classList.toggle('on', b.dataset.k === key));
@@ -664,7 +664,7 @@ document.querySelectorAll('.preset').forEach(b => b.onclick = () => selectPreset
 $('#newProjBtn').onclick = () => {
   $('#projName').value = '';
   $('#customW').value = 1280; $('#customH').value = 720;
-  selectPreset('16:9');
+  selectPreset('9:16');
   $('#newProjPop').hidden = false;
 };
 $('#projCancel').onclick = () => { $('#newProjPop').hidden = true; };
