@@ -108,7 +108,7 @@
   }
   .tbtn.on{background:var(--accent); border-color:var(--accent); color:#0e1418}
   .tbtn svg{width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round}
-  #size, #opacity{width:46px; height:80px; -webkit-appearance:slider-vertical; writing-mode:vertical-lr; direction:rtl; accent-color:var(--accent)}
+  #size, #opacity, #stabilize{width:46px; height:70px; -webkit-appearance:slider-vertical; writing-mode:vertical-lr; direction:rtl; accent-color:var(--accent)}
   #sizeVal{font-family:var(--mono); font-size:11px; color:var(--muted)}
   #swatches{display:grid; grid-template-columns:repeat(2,1fr); gap:5px; padding:0 8px; width:100%}
   .sw{aspect-ratio:1; border-radius:50%; border:2px solid transparent; box-shadow:0 0 0 1px #0006 inset}
@@ -271,6 +271,9 @@
       <span class="lbl">濃さ</span>
       <input type="range" id="opacity" min="5" max="100" step="5" value="100" orient="vertical">
       <span id="opacityVal">100%</span>
+      <span class="lbl">手ブレ補正</span>
+      <input type="range" id="stabilize" min="0" max="100" step="5" value="0" orient="vertical">
+      <span id="stabilizeVal">0%</span>
       <span class="lbl">色</span>
       <div id="swatches"></div>
       <input type="color" id="custom" value="#1a1a1a">
@@ -443,6 +446,7 @@ const state = {
   pencilOnly: false,
   pressureEnabled: true,
   opacity: 1,
+  stabilize: 0,
   playing: false,
   zoom: 1,
   panX: 0,
@@ -707,6 +711,7 @@ async function openProject(pid){
     state.pencilOnly = !!meta.pencilOnly; state.zoom = meta.zoom || 1;
     state.pressureEnabled = meta.pressureEnabled ?? true;
     state.opacity = meta.opacity ?? 1;
+    state.stabilize = meta.stabilize ?? 0;
     for (const fdesc of meta.order){
       if (typeof fdesc === 'string'){
         // 旧形式(レイヤー未対応時代)のコマを1レイヤーとして移行
@@ -731,6 +736,7 @@ async function openProject(pid){
     state.fps = 12; state.onion = 1; state.size = 6; state.color = '#1a1a1a'; state.pencilOnly = false;
     state.pressureEnabled = true;
     state.opacity = 1;
+    state.stabilize = 0;
     const layerId = uid();
     state.frames = [{ id: uid(), layers: [{ id: layerId, blob: null, img: null, name: 'レイヤー1', visible: true }], active: layerId, img: null }];
   }
@@ -762,7 +768,7 @@ function saveMeta(){
         layers: f.layers.map(l => ({ id: l.id, name: l.name, visible: l.visible !== false }))
       })),
       cur: state.cur, fps: state.fps, onion: state.onion,
-      size: state.size, color: state.color, pencilOnly: state.pencilOnly, zoom: state.zoom, pressureEnabled: state.pressureEnabled, opacity: state.opacity
+      size: state.size, color: state.color, pencilOnly: state.pencilOnly, zoom: state.zoom, pressureEnabled: state.pressureEnabled, opacity: state.opacity, stabilize: state.stabilize
     }).catch(()=>{});
     if (state.proj){
       state.proj.updatedAt = Date.now();
@@ -981,6 +987,14 @@ async function doBucketFill(e){
   refreshUndo();
 }
 
+let smoothPt = null, lastRaw = null;
+function stabilizePoint(raw){
+  const factor = 1 - state.stabilize * 0.9;   // stabilize=0→1(補正なし) 1→0.1(強く補正)
+  smoothPt.x += (raw.x - smoothPt.x) * factor;
+  smoothPt.y += (raw.y - smoothPt.y) * factor;
+  return { x: smoothPt.x, y: smoothPt.y };
+}
+
 paper.addEventListener('pointerdown', e => {
   if (state.playing) return;
   if (pinch) return;
@@ -996,7 +1010,9 @@ paper.addEventListener('pointerdown', e => {
   paper.setPointerCapture(e.pointerId);
   drawing = true;
   pushUndo();
-  last = toCanvas(e);
+  lastRaw = toCanvas(e);
+  smoothPt = { x: lastRaw.x, y: lastRaw.y };
+  last = { x: lastRaw.x, y: lastRaw.y };
   smWidth = widthFor(e);
   ptBuf = [last, last, last];
   if (state.tool === 'eraser'){
@@ -1016,7 +1032,9 @@ paper.addEventListener('pointermove', e => {
   const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
   const target = state.tool === 'eraser' ? pctx : sctx;
   for (const ev of evs) {
-    const p = toCanvas(ev);
+    const raw = toCanvas(ev);
+    lastRaw = raw;
+    const p = state.stabilize > 0 ? stabilizePoint(raw) : raw;
     smWidth = smWidth ? smWidth * 0.7 + widthFor(ev) * 0.3 : widthFor(ev);
     ptBuf.push(p); if (ptBuf.length > 3) ptBuf.shift();
     if (ptBuf.length === 3) strokeQuad(target, ptBuf[0], ptBuf[1], ptBuf[2], smWidth);
@@ -1028,13 +1046,20 @@ paper.addEventListener('pointermove', e => {
 function endStroke(e){
   if (!drawing || (e && e.pointerId !== activeId)) return;
   const target = state.tool === 'eraser' ? pctx : sctx;
+  if (state.stabilize > 0 && lastRaw){
+    // ラグを実際に指を離した位置まで収束させて、線が手前で止まらないようにする
+    let p = last;
+    for (let i = 0; i < 6; i++) p = stabilizePoint(lastRaw);
+    ptBuf.push(p); if (ptBuf.length > 3) ptBuf.shift();
+    if (ptBuf.length === 3) strokeQuad(target, ptBuf[0], ptBuf[1], ptBuf[2], smWidth);
+  }
   if (ptBuf.length === 3){
     const m2 = midPoint(ptBuf[1], ptBuf[2]);
     target.lineWidth = smWidth;
     target.beginPath(); target.moveTo(m2.x, m2.y); target.lineTo(ptBuf[2].x, ptBuf[2].y); target.stroke();
   }
   if (state.tool !== 'eraser') compositeLivePreview();
-  drawing = false; activeId = null; activePointerType = null; last = null; ptBuf = [];
+  drawing = false; activeId = null; activePointerType = null; last = null; ptBuf = []; smoothPt = null; lastRaw = null;
   pctx.globalCompositeOperation = 'source-over';
   commit();
   refreshUndo();
@@ -1236,6 +1261,8 @@ function syncTools(){
   $('#size').value = state.size;
   $('#opacityVal').textContent = Math.round(state.opacity * 100) + '%';
   $('#opacity').value = Math.round(state.opacity * 100);
+  $('#stabilizeVal').textContent = Math.round(state.stabilize * 100) + '%';
+  $('#stabilize').value = Math.round(state.stabilize * 100);
   $('#fps').value = state.fps; $('#fpsVal').textContent = state.fps;
   $('#onionBtn').textContent = state.onion ? `オニオン: ${state.onion}枚` : 'オニオン: なし';
   $('#onionBtn').classList.toggle('on', state.onion > 0);
@@ -1250,6 +1277,7 @@ $('#bucket').onclick = () => { state.tool = 'bucket'; syncTools(); saveMeta(); }
 $('#swapTool').onclick = () => { state.tool = state.tool === 'eraser' ? 'pen' : 'eraser'; syncTools(); saveMeta(); };
 $('#size').oninput   = e => { state.size = +e.target.value; $('#sizeVal').textContent = state.size; saveMeta(); };
 $('#opacity').oninput = e => { state.opacity = +e.target.value / 100; $('#opacityVal').textContent = e.target.value + '%'; saveMeta(); };
+$('#stabilize').oninput = e => { state.stabilize = +e.target.value / 100; $('#stabilizeVal').textContent = e.target.value + '%'; saveMeta(); };
 $('#custom').oninput = e => { state.color = e.target.value; if (state.tool !== 'bucket') state.tool = 'pen'; syncTools(); saveMeta(); };
 $('#fps').oninput    = e => { state.fps = +e.target.value; $('#fpsVal').textContent = state.fps; saveMeta(); };
 $('#onionBtn').onclick   = () => { state.onion = (state.onion + 1) % 3; syncTools(); drawOnion(); saveMeta(); };
