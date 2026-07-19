@@ -249,6 +249,7 @@
     <button class="btn" id="layerBtn">レイヤー</button>
     <button class="btn" id="pencilOnly">指OK</button>
     <button class="btn" id="pressureBtn">筆圧オン</button>
+    <button class="btn" id="shapeSnapBtn">図形補正: オン</button>
     <button class="btn wide" id="exportBtn">書き出し</button>
     <button class="btn" id="menuBtn">…</button>
   </header>
@@ -263,6 +264,9 @@
       </button>
       <button class="tbtn" id="bucket" title="バケツ塗り">
         <svg viewBox="0 0 24 24"><path d="M3 11l8-8 9 9-8 8-9-9z"/><path d="M11 3l7 7"/><path d="M4 14c3 4 8 6 12 3"/><circle cx="19" cy="18" r="1.6"/></svg>
+      </button>
+      <button class="tbtn" id="moveTool" title="レイヤーを移動">
+        <svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18"/><path d="M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3"/></svg>
       </button>
       <button class="tbtn" id="swapTool" title="ペン/消しゴムを入れ替え">⇄</button>
       <span class="lbl">太さ</span>
@@ -401,6 +405,9 @@
       <button class="btn wide" id="layerCopy" style="flex:1">コピー</button>
       <button class="btn wide" id="layerPaste" style="flex:1" disabled>このコマに貼り付け</button>
     </div>
+    <div class="row">
+      <button class="btn wide" id="layerMoveBtn" style="flex:1">選択中のレイヤーを移動</button>
+    </div>
     <p class="lbl">「コピー」→ 別のコマに移動 →「このコマに貼り付け」で、レイヤーを他のページへ複製できます。</p>
     <div class="row"><button class="btn wide" id="layerClose" style="flex:1">閉じる</button></div>
   </div>
@@ -447,6 +454,7 @@ const state = {
   pressureEnabled: true,
   opacity: 1,
   stabilize: 0,
+  shapeSnap: true,
   playing: false,
   zoom: 1,
   panX: 0,
@@ -712,6 +720,7 @@ async function openProject(pid){
     state.pressureEnabled = meta.pressureEnabled ?? true;
     state.opacity = meta.opacity ?? 1;
     state.stabilize = meta.stabilize ?? 0;
+    state.shapeSnap = meta.shapeSnap ?? true;
     for (const fdesc of meta.order){
       if (typeof fdesc === 'string'){
         // 旧形式(レイヤー未対応時代)のコマを1レイヤーとして移行
@@ -733,10 +742,11 @@ async function openProject(pid){
     }
     state.cur = Math.min(meta.cur ?? 0, state.frames.length - 1);
   } else {
-    state.fps = 12; state.onion = 1; state.size = 6; state.color = '#1a1a1a'; state.pencilOnly = false;
-    state.pressureEnabled = true;
+    state.fps = 12; state.onion = 1; state.size = 6; state.color = '#1a1a1a'; state.pencilOnly = true;
+    state.pressureEnabled = false;
     state.opacity = 1;
     state.stabilize = 0;
+    state.shapeSnap = true;
     const layerId = uid();
     state.frames = [{ id: uid(), layers: [{ id: layerId, blob: null, img: null, name: 'レイヤー1', visible: true }], active: layerId, img: null }];
   }
@@ -768,7 +778,7 @@ function saveMeta(){
         layers: f.layers.map(l => ({ id: l.id, name: l.name, visible: l.visible !== false }))
       })),
       cur: state.cur, fps: state.fps, onion: state.onion,
-      size: state.size, color: state.color, pencilOnly: state.pencilOnly, zoom: state.zoom, pressureEnabled: state.pressureEnabled, opacity: state.opacity, stabilize: state.stabilize
+      size: state.size, color: state.color, pencilOnly: state.pencilOnly, zoom: state.zoom, pressureEnabled: state.pressureEnabled, opacity: state.opacity, stabilize: state.stabilize, shapeSnap: state.shapeSnap
     }).catch(()=>{});
     if (state.proj){
       state.proj.updatedAt = Date.now();
@@ -987,13 +997,143 @@ async function doBucketFill(e){
   refreshUndo();
 }
 
-let smoothPt = null, lastRaw = null;
+let smoothPt = null, lastRaw = null, shapePts = [];
 function stabilizePoint(raw){
   const factor = 1 - state.stabilize * 0.9;   // stabilize=0→1(補正なし) 1→0.1(強く補正)
   smoothPt.x += (raw.x - smoothPt.x) * factor;
   smoothPt.y += (raw.y - smoothPt.y) * factor;
   return { x: smoothPt.x, y: smoothPt.y };
 }
+
+/* ---- 図形認識(直線・円をきれいに補正) ---- */
+const ptDist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+function pathLength(pts){ let d = 0; for (let i = 1; i < pts.length; i++) d += ptDist(pts[i - 1], pts[i]); return d; }
+function maxPerpDeviation(pts, a, b){
+  const dx = b.x - a.x, dy = b.y - a.y, len2 = dx * dx + dy * dy || 1;
+  let max = 0;
+  for (const p of pts){
+    const t = ((p.x - a.x) * dx + (p.y - a.y) * dy) / len2;
+    const px = a.x + t * dx, py = a.y + t * dy;
+    const d = Math.hypot(p.x - px, p.y - py);
+    if (d > max) max = d;
+  }
+  return max;
+}
+function boundingBox(pts){
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for (const p of pts){ if (p.x < minX) minX = p.x; if (p.x > maxX) maxX = p.x; if (p.y < minY) minY = p.y; if (p.y > maxY) maxY = p.y; }
+  return { minX, minY, maxX, maxY };
+}
+function angleCoverage(pts, cx, cy){
+  let prev = Math.atan2(pts[0].y - cy, pts[0].x - cx), total = 0;
+  for (let i = 1; i < pts.length; i++){
+    const a = Math.atan2(pts[i].y - cy, pts[i].x - cx);
+    let d = a - prev;
+    while (d > Math.PI) d -= Math.PI * 2;
+    while (d < -Math.PI) d += Math.PI * 2;
+    total += d; prev = a;
+  }
+  return Math.abs(total);
+}
+// 点列から中心・半径を最小二乗で推定する円フィット(Kasa法)。閉じていない弧(半円など)にも使える。
+function fitCircle(pts){
+  let Sx = 0, Sy = 0, Sxx = 0, Syy = 0, Sxy = 0, Sxz = 0, Syz = 0, Sz = 0;
+  const n = pts.length;
+  for (const p of pts){
+    const x = p.x, y = p.y, z = x * x + y * y;
+    Sx += x; Sy += y; Sxx += x * x; Syy += y * y; Sxy += x * y;
+    Sxz += x * z; Syz += y * z; Sz += z;
+  }
+  const a11 = Sxx, a12 = Sxy, a13 = Sx;
+  const a21 = Sxy, a22 = Syy, a23 = Sy;
+  const a31 = Sx, a32 = Sy, a33 = n;
+  const b1 = -Sxz, b2 = -Syz, b3 = -Sz;
+  const det = a11 * (a22 * a33 - a23 * a32) - a12 * (a21 * a33 - a23 * a31) + a13 * (a21 * a32 - a22 * a31);
+  if (Math.abs(det) < 1e-6) return null;
+  const detD = b1 * (a22 * a33 - a23 * a32) - a12 * (b2 * a33 - a23 * b3) + a13 * (b2 * a32 - a22 * b3);
+  const detE = a11 * (b2 * a33 - a23 * b3) - b1 * (a21 * a33 - a23 * a31) + a13 * (a21 * b3 - b2 * a31);
+  const detF = a11 * (a22 * b3 - b2 * a32) - a12 * (a21 * b3 - b2 * a31) + b1 * (a21 * a32 - a22 * a31);
+  const D = detD / det, E = detE / det, F = detF / det;
+  const cx = -D / 2, cy = -E / 2;
+  const r2 = cx * cx + cy * cy - F;
+  if (r2 <= 0) return null;
+  return { cx, cy, r: Math.sqrt(r2) };
+}
+function arcSpan(pts, cx, cy){
+  const a0 = Math.atan2(pts[0].y - cy, pts[0].x - cx);
+  let prev = a0, total = 0;
+  for (let i = 1; i < pts.length; i++){
+    const a = Math.atan2(pts[i].y - cy, pts[i].x - cx);
+    let d = a - prev;
+    while (d > Math.PI) d -= Math.PI * 2;
+    while (d < -Math.PI) d += Math.PI * 2;
+    total += d; prev = a;
+  }
+  return { start: a0, end: a0 + total, span: total };
+}
+function detectShape(pts){
+  if (pts.length < 6) return null;
+  const p0 = pts[0], pN = pts[pts.length - 1];
+  const straightDist = ptDist(p0, pN);
+  // --- 直線判定 ---
+  if (straightDist > 26){
+    const maxDev = maxPerpDeviation(pts, p0, pN);
+    if (maxDev < Math.max(9, straightDist * 0.055)) return { type: 'line', p0, p1: pN };
+  }
+  // --- 閉じた円/楕円判定 ---
+  const bb = boundingBox(pts);
+  const cx = (bb.minX + bb.maxX) / 2, cy = (bb.minY + bb.maxY) / 2;
+  const rx = (bb.maxX - bb.minX) / 2, ry = (bb.maxY - bb.minY) / 2;
+  if (rx > 14 && ry > 14){
+    let maxErr = 0, sumErr = 0;
+    for (const p of pts){
+      const nx = (p.x - cx) / rx, ny = (p.y - cy) / ry;
+      const err = Math.abs(Math.hypot(nx, ny) - 1);
+      if (err > maxErr) maxErr = err;
+      sumErr += err;
+    }
+    const avgErr = sumErr / pts.length;
+    const closed = ptDist(p0, pN) < Math.max(rx, ry) * 0.4;
+    const coverage = angleCoverage(pts, cx, cy);
+    if (closed && avgErr < 0.22 && maxErr < 0.42 && coverage > 4.5){
+      return { type: 'ellipse', cx, cy, rx, ry };
+    }
+  }
+  // --- 円弧判定(半円・扇形など、閉じていない弧) ---
+  const fit = fitCircle(pts);
+  if (fit && fit.r > 18 && fit.r < Math.max(W, H) * 2){
+    let maxErr = 0, sumErr = 0;
+    for (const p of pts){
+      const d = Math.hypot(p.x - fit.cx, p.y - fit.cy);
+      const err = Math.abs(d - fit.r) / fit.r;
+      if (err > maxErr) maxErr = err;
+      sumErr += err;
+    }
+    const avgErr = sumErr / pts.length;
+    const { start, end, span } = arcSpan(pts, fit.cx, fit.cy);
+    if (avgErr < 0.09 && maxErr < 0.18 && Math.abs(span) > 0.4){
+      return { type: 'arc', cx: fit.cx, cy: fit.cy, r: fit.r, start, end, anticlockwise: span < 0 };
+    }
+  }
+  return null;
+}
+function applyShapeSnap(ctx, shape, w){
+  ctx.clearRect(0, 0, W, H);
+  setBrush(ctx);
+  ctx.lineWidth = w; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.beginPath();
+  if (shape.type === 'line'){
+    ctx.moveTo(shape.p0.x, shape.p0.y); ctx.lineTo(shape.p1.x, shape.p1.y);
+  } else if (shape.type === 'arc'){
+    ctx.arc(shape.cx, shape.cy, shape.r, shape.start, shape.end, shape.anticlockwise);
+  } else {
+    ctx.ellipse(shape.cx, shape.cy, shape.rx, shape.ry, 0, 0, Math.PI * 2);
+  }
+  ctx.stroke();
+}
+
+
+let moveSnapshot = null, moveStart = null;
 
 paper.addEventListener('pointerdown', e => {
   if (state.playing) return;
@@ -1003,6 +1143,17 @@ paper.addEventListener('pointerdown', e => {
   e.preventDefault();
   if (state.tool === 'bucket'){
     doBucketFill(e);
+    return;
+  }
+  if (state.tool === 'move'){
+    activeId = e.pointerId;
+    activePointerType = e.pointerType;
+    paper.setPointerCapture(e.pointerId);
+    drawing = true;
+    pushUndo();
+    moveStart = toCanvas(e);
+    moveSnapshot = document.createElement('canvas'); moveSnapshot.width = W; moveSnapshot.height = H;
+    moveSnapshot.getContext('2d').drawImage(paper, 0, 0);   // 今のアクティブレイヤーの内容を退避
     return;
   }
   activeId = e.pointerId;
@@ -1015,6 +1166,7 @@ paper.addEventListener('pointerdown', e => {
   last = { x: lastRaw.x, y: lastRaw.y };
   smWidth = widthFor(e);
   ptBuf = [last, last, last];
+  shapePts = [{ x: lastRaw.x, y: lastRaw.y }];
   if (state.tool === 'eraser'){
     setBrush(pctx);
     segment(pctx, last, { x: last.x + 0.01, y: last.y }, smWidth);
@@ -1029,11 +1181,19 @@ paper.addEventListener('pointerdown', e => {
 paper.addEventListener('pointermove', e => {
   if (!drawing || e.pointerId !== activeId) return;
   e.preventDefault();
+  if (state.tool === 'move'){
+    const p = toCanvas(e);
+    const dx = p.x - moveStart.x, dy = p.y - moveStart.y;
+    pctx.clearRect(0, 0, W, H);
+    pctx.drawImage(moveSnapshot, dx, dy);
+    return;
+  }
   const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
   const target = state.tool === 'eraser' ? pctx : sctx;
   for (const ev of evs) {
     const raw = toCanvas(ev);
     lastRaw = raw;
+    shapePts.push(raw);
     const p = state.stabilize > 0 ? stabilizePoint(raw) : raw;
     smWidth = smWidth ? smWidth * 0.7 + widthFor(ev) * 0.3 : widthFor(ev);
     ptBuf.push(p); if (ptBuf.length > 3) ptBuf.shift();
@@ -1045,6 +1205,13 @@ paper.addEventListener('pointermove', e => {
 
 function endStroke(e){
   if (!drawing || (e && e.pointerId !== activeId)) return;
+  if (state.tool === 'move'){
+    drawing = false; activeId = null; activePointerType = null;
+    moveSnapshot = null; moveStart = null;
+    commit();
+    refreshUndo();
+    return;
+  }
   const target = state.tool === 'eraser' ? pctx : sctx;
   if (state.stabilize > 0 && lastRaw){
     // ラグを実際に指を離した位置まで収束させて、線が手前で止まらないようにする
@@ -1058,8 +1225,13 @@ function endStroke(e){
     target.lineWidth = smWidth;
     target.beginPath(); target.moveTo(m2.x, m2.y); target.lineTo(ptBuf[2].x, ptBuf[2].y); target.stroke();
   }
+  // 図形認識: 直線・円に近ければきれいな形に描き直す(ペンのみ)
+  if (state.tool !== 'eraser' && state.shapeSnap){
+    const shape = detectShape(shapePts);
+    if (shape) applyShapeSnap(sctx, shape, smWidth);
+  }
   if (state.tool !== 'eraser') compositeLivePreview();
-  drawing = false; activeId = null; activePointerType = null; last = null; ptBuf = []; smoothPt = null; lastRaw = null;
+  drawing = false; activeId = null; activePointerType = null; last = null; ptBuf = []; smoothPt = null; lastRaw = null; shapePts = [];
   pctx.globalCompositeOperation = 'source-over';
   commit();
   refreshUndo();
@@ -1256,6 +1428,7 @@ function syncTools(){
   $('#pen').classList.toggle('on', state.tool === 'pen');
   $('#eraser').classList.toggle('on', state.tool === 'eraser');
   $('#bucket').classList.toggle('on', state.tool === 'bucket');
+  $('#moveTool').classList.toggle('on', state.tool === 'move');
   [...$('#swatches').children].forEach((b, i) => b.classList.toggle('on', COLORS[i] === state.color));
   $('#sizeVal').textContent = state.size;
   $('#size').value = state.size;
@@ -1270,10 +1443,13 @@ function syncTools(){
   $('#pencilOnly').classList.toggle('on', state.pencilOnly);
   $('#pressureBtn').textContent = state.pressureEnabled ? '筆圧オン' : '筆圧オフ(一定)';
   $('#pressureBtn').classList.toggle('on', state.pressureEnabled);
+  $('#shapeSnapBtn').textContent = state.shapeSnap ? '図形補正: オン' : '図形補正: オフ';
+  $('#shapeSnapBtn').classList.toggle('on', state.shapeSnap);
 }
 $('#pen').onclick    = () => { state.tool = 'pen'; syncTools(); saveMeta(); };
 $('#eraser').onclick = () => { state.tool = 'eraser'; syncTools(); saveMeta(); };
 $('#bucket').onclick = () => { state.tool = 'bucket'; syncTools(); saveMeta(); };
+$('#moveTool').onclick = () => { state.tool = 'move'; syncTools(); saveMeta(); };
 $('#swapTool').onclick = () => { state.tool = state.tool === 'eraser' ? 'pen' : 'eraser'; syncTools(); saveMeta(); };
 $('#size').oninput   = e => { state.size = +e.target.value; $('#sizeVal').textContent = state.size; saveMeta(); };
 $('#opacity').oninput = e => { state.opacity = +e.target.value / 100; $('#opacityVal').textContent = e.target.value + '%'; saveMeta(); };
@@ -1283,6 +1459,7 @@ $('#fps').oninput    = e => { state.fps = +e.target.value; $('#fpsVal').textCont
 $('#onionBtn').onclick   = () => { state.onion = (state.onion + 1) % 3; syncTools(); drawOnion(); saveMeta(); };
 $('#pencilOnly').onclick = () => { state.pencilOnly = !state.pencilOnly; syncTools(); saveMeta(); };
 $('#pressureBtn').onclick = () => { state.pressureEnabled = !state.pressureEnabled; syncTools(); saveMeta(); };
+$('#shapeSnapBtn').onclick = () => { state.shapeSnap = !state.shapeSnap; syncTools(); saveMeta(); };
 $('#add').onclick   = () => !state.playing && addFrame(false);
 $('#dup').onclick   = () => !state.playing && addFrame(true);
 $('#del').onclick   = () => !state.playing && delFrame();
@@ -1503,6 +1680,7 @@ async function pasteLayerHere(){
 }
 $('#layerBtn').onclick = () => { renderLayerPanel(); $('#layerPop').hidden = false; };
 $('#layerClose').onclick = () => { $('#layerPop').hidden = true; };
+$('#layerMoveBtn').onclick = () => { $('#layerPop').hidden = true; state.tool = 'move'; syncTools(); };
 $('#layerAdd').onclick  = () => addLayerBlank();
 $('#layerDup').onclick  = () => duplicateActiveLayer();
 $('#layerDel').onclick  = () => deleteActiveLayer();
